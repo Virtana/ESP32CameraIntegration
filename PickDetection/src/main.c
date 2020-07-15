@@ -23,6 +23,7 @@
  * http://www.FreeRTOS.org
  */
 
+
 #include "iot_config.h"
 
 /* FreeRTOS includes. */
@@ -49,6 +50,7 @@
 #include "esp_wifi.h"
 #include "esp_interface.h"
 #include "esp_bt.h"
+
 #if CONFIG_NIMBLE_ENABLED == 1
     #include "esp_nimble_hci.h"
 #else
@@ -79,6 +81,7 @@
 #define mainDEVICE_NICK_NAME                "Espressif_Demo"
 
 QueueHandle_t spp_uart_queue = NULL;
+
 
 /* Static arrays for FreeRTOS+TCP stack initialization for Ethernet network connections
  * are use are below. If you are using an Ethernet connection on your MCU device it is
@@ -132,7 +135,8 @@ int app_main( void )
             ESP_ERROR_CHECK( esp_bt_controller_mem_release( ESP_BT_MODE_BLE ) );
         #endif /* if BLE_ENABLED */
         /* Run all demos. */
-        DEMO_RUNNER_RunDemos();
+        //DEMO_RUNNER_RunDemos();
+        configPRINTF(("Hello !!!!!!\n"));
     }
 
     /* Start the scheduler.  Initialization that requires the OS to be running,
