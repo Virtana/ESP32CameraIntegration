@@ -2,3 +2,6 @@
 	path = amazon-freertos
 	url = https://github.com/aws/amazon-freertos.git
 	branch = release
+[submodule "esp32-camera"]
+	path = esp32-camera
+	url = https://github.com/espressif/esp32-camera.git
