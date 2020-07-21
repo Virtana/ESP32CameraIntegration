@@ -28,7 +28,7 @@
 import VueCsvDownloader from 'vue-csv-downloader';
  
 export default {
-  name: 'HelloWorld',
+  name: 'ImageLabeller',
   props: {
     msg: String
   },

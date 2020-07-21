@@ -4,17 +4,17 @@
         <b-jumbotron bg-variant="info" text-variant="white" header="SPC:ESP 32 Camera Integration" lead="Track 3: Face Identification using ML APIs">
         </b-jumbotron>
       </div> -->
-      <HelloWorld msg="Let's get started"/>
+      <ImageLabeller msg="Let's get started"/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import ImageLabeller from './components/ImageLabeller.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    ImageLabeller
   }
 }
 </script>
