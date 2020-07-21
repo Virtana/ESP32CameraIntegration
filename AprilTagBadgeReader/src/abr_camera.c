@@ -1,5 +1,6 @@
 
 #include "FreeRTOS.h"
+#include "task.h"
 
 #include "abr_camera.h"
 #include "abr_apriltags.h"
@@ -8,7 +9,16 @@
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
 #include "esp_system.h"
+#include "esp_log.h"
 
+
+
+//#define DISPLAY_CAPTURES //comment this define to disable streaming of images to http server
+
+#ifdef DISPLAY_CAPTURES
+    #include "abr_display_image.h"
+    #include "abr_camera_wifi.h"
+#endif
 
 esp_err_t initialize_camera()
 {
@@ -37,10 +47,10 @@ esp_err_t initialize_camera()
 
     config.xclk_freq_hz = 20000000; //20MHz
 
-    config.pixel_format = PIXFORMAT_GRAYSCALE;
+    config.pixel_format = PIXFORMAT_JPEG;
     config.frame_size = FRAMESIZE_VGA; // VGA = 640x480  (see sensors.h)
 
-    /*
+    /* USING GRAYSCALE:
         FRAMESIZE_QVGA (320X240px) - stable| inconsistent detection when image is taken at an angle. Takes ~1 second per detection
 
         FRAMESIZE_VGA (640x480px) - seems to be stable..............| , detection is significantly more consistent than QVGA. Takes ~4 seconds per detection.
@@ -50,7 +60,7 @@ esp_err_t initialize_camera()
         FRAMESIZE > VGA - Instant crash! (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
     */
 
-    config.jpeg_quality = 63;
+    config.jpeg_quality = 25;
     config.fb_count = 1;
 
     /* ON ESP-EYE, IO13, IO14 is designed for JTAG by default,
@@ -80,19 +90,36 @@ esp_err_t initialize_camera()
     return error;
 }
 
+
 esp_err_t capture_image()
 {
-    camera_fb_t* fb = esp_camera_fb_get();
-
-    if(!fb)
+    while(true)
     {
-        configPRINTF(("Failed to capture image"));
-        return ESP_FAIL;
+        #ifndef DISPLAY_CAPTURES
+        camera_fb_t* fb = esp_camera_fb_get();
+
+        if(!fb)
+        {
+            configPRINTF(("Failed to capture image"));
+            return ESP_FAIL;
+        }
+
+        //configPRINTF(("%i\n",fb->len));
+        detect_apriltags(fb);
+
+        esp_camera_fb_return(fb);
+        #endif
+
+        //Let Http server handle captures and aptiltag detection.
+        #ifdef DISPLAY_CAPTURES
+        app_wifi_main();
+        //display_image_initialize();
+        #endif
+
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    detect_apriltags(fb);
 
-    esp_camera_fb_return(fb);
 
     return ESP_OK;
 }

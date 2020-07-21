@@ -8,36 +8,79 @@
 #include "apriltag.h"
 #include "tag36h11.h"
 #include "zarray.h"
+#include "pjpeg.h"
 
 
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
 #include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_interface.h"
 
 void detect_apriltags(camera_fb_t* fb)
 {   
     image_u8_t* image = NULL;
 
-    //See apriltag/common/image_u8.c
-    //this function calls image_u8_create_stride() with a calculated stride value.
-    image = image_u8_create_alignment(fb->width,fb->height,32); // set alignment to 32 to remove all line padding (i.e. stride = width) (32-bit cpu and 8 bit data in image... no padding requied)
-
-    if(image == NULL)
-    {
-        configPRINTF(("Failed to create u8 image\n"));
-        return;
-    }
-
     //copy fb->buf to image->buf, accounting for any line padding in image->buf
-    for(int row=0;row<(image->height);row++)
+    if(fb->format == PIXFORMAT_GRAYSCALE)
     {
-        for(int col=0;col<(image->width);col++)
+        //See apriltag/common/image_u8.c
+        //this function calls image_u8_create_stride() with a calculated stride value.
+        image = image_u8_create_alignment(fb->width,fb->height,32); // set alignment to 32 to remove all line padding (i.e. stride = width) (32-bit cpu and 8 bit data in image... no padding requied)
+
+        if(image == NULL)
         {
-            image->buf[(row*(image->stride))+col] = fb->buf[(row*(image->width))+col];
+            configPRINTF(("Failed to create u8 image\n"));
+            return;
+        }
+
+        for(int row=0;row<(image->height);row++)
+        {
+            for(int col=0;col<(image->width);col++)
+            {
+                image->buf[(row*(image->stride))+col] = fb->buf[(row*(image->width))+col];
+            }
         }
     }
+    else if(fb->format == PIXFORMAT_JPEG)
+    {
+        //configPRINTF(("JPEG detected\n"));
+        
+        int error = 0;
 
-    configPRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
+        pjpeg_t* pjpeg_image = NULL;
+
+
+        pjpeg_image = pjpeg_create_from_buffer(fb->buf,fb->len,0,&error);
+        //free(image_buffer);
+
+        if(pjpeg_image == NULL)
+        {
+            configPRINTF(("Failed to create PJPEG image. Error:%i\n",error));
+
+            pjpeg_destroy(pjpeg_image);
+            //free(image_buffer);
+            image_u8_destroy(image);
+
+            return;
+        }
+
+        image = pjpeg_to_u8_baseline(pjpeg_image);
+        pjpeg_destroy(pjpeg_image);
+
+        if(image==NULL)
+        {
+            configPRINTF(("Failed to create u8 from PJPEG.\n"));
+
+            pjpeg_destroy(pjpeg_image);
+            //free(image_buffer);
+            image_u8_destroy(image);
+
+            return;
+        }
+    }
+    
+    //configPRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
 
 
     apriltag_detector_t* detector = apriltag_detector_create();
