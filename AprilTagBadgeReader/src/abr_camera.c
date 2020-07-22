@@ -12,9 +12,6 @@
 #include "esp_log.h"
 
 
-
-//#define DISPLAY_CAPTURES //comment this define to disable streaming of images to http server
-
 #ifdef DISPLAY_CAPTURES
     #include "abr_display_image.h"
     #include "abr_camera_wifi.h"
@@ -95,7 +92,6 @@ esp_err_t capture_image()
 {
     while(true)
     {
-        #ifndef DISPLAY_CAPTURES
         camera_fb_t* fb = esp_camera_fb_get();
 
         if(!fb)
@@ -108,18 +104,9 @@ esp_err_t capture_image()
         detect_apriltags(fb);
 
         esp_camera_fb_return(fb);
-        #endif
-
-        //Let Http server handle captures and aptiltag detection.
-        #ifdef DISPLAY_CAPTURES
-        app_wifi_main();
-        //display_image_initialize();
-        #endif
 
         vTaskDelay(pdMS_TO_TICKS(500));
     }
-
-
 
     return ESP_OK;
 }

@@ -22,6 +22,12 @@
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
 
+#define DISPLAY_IMAGES //comment this line to skip displaying images.
+
+#ifdef DISPLAY_IMAGES
+    #include "abr_camera_wifi.h"
+    #include "abr_display_image.h"
+#endif
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
@@ -59,10 +65,20 @@ static void prvMiscInitialization( void )
 int app_main(void)
 {
     prvMiscInitialization();
-    initialize_camera();
 
-    //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-    xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
+    #ifdef DISPLAY_IMAGES
+        initialize_camera();
+        app_wifi_main();
+        display_image_initialize();
+    #endif
+
+    #ifndef DISPLAY_IMAGES
+
+        initialize_camera();
+
+        //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
+        xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
+    #endif
 
     return 0;
 }
