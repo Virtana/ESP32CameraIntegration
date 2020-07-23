@@ -3,8 +3,6 @@
 
 #include "abr_apriltags.h"
 
-#include "FreeRTOS.h"
-
 #include "apriltag.h"
 #include "tag36h11.h"
 #include "zarray.h"
@@ -41,7 +39,7 @@ void detect_apriltags(camera_fb_t* fb)
 
 
     apriltag_detector_t* detector = apriltag_detector_create();
-	apriltag_family_t* family = tag36h11_create();
+    apriltag_family_t* family = tag36h11_create();
 
     apriltag_detector_add_family_bits(detector,family,1);
 

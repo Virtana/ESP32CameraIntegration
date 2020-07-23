@@ -84,9 +84,9 @@ esp_err_t capture_image()
 {
     camera_fb_t* fb = esp_camera_fb_get();
 
-    if(!fb)
+    if(fb == NULL)
     {
-        configPRINTF(("Failed to capture image"));
+        configPRINTF(("Failed to capture image\n"));
         return ESP_FAIL;
     }
 

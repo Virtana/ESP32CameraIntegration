@@ -29,6 +29,8 @@ set(AFR_BOARD espressif.esp32_devkitc CACHE INTERNAL "")
 #FreeRTOSConfig.h is added to freertos-configs to disable the use of hook functions.
 include_directories(BEFORE freertos-configs)
 
+include_directories(BEFORE ./include)
+
 add_subdirectory(../amazon-freertos ./build)
 
 # Link against the mqtt library so that we can use it. Dependencies are transitively

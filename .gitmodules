@@ -2,9 +2,10 @@
 	path = amazon-freertos
 	url = https://github.com/aws/amazon-freertos.git
 	branch = release
-[submodule "AprilTagBadgeReader/components/esp32-camera"]
-	path = AprilTagBadgeReader/components/esp32-camera
-	url = git@github.com:espressif/esp32-camera.git
+[submodule "esp32-camera"]
+	path = esp32-camera
+	url = https://github.com/espressif/esp32-camera.git
 [submodule "AprilTagBadgeReader/components/apriltag-component"]
 	path = AprilTagBadgeReader/components/apriltag-component
 	url = git@github.com:enrique-ramkissoon/apriltag-component.git
+
