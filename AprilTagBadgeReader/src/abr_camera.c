@@ -90,9 +90,13 @@ esp_err_t initialize_camera()
 
 esp_err_t capture_image()
 {
-    while(true)
+    camera_fb_t* fb = esp_camera_fb_get();
+
+    if(fb == NULL)
     {
-        camera_fb_t* fb = esp_camera_fb_get();
+        configPRINTF(("Failed to capture image\n"));
+        return ESP_FAIL;
+    }
 
         if(!fb)
         {

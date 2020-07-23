@@ -3,8 +3,6 @@
 
 #include "abr_apriltags.h"
 
-#include "FreeRTOS.h"
-
 #include "apriltag.h"
 #include "tag36h11.h"
 #include "zarray.h"

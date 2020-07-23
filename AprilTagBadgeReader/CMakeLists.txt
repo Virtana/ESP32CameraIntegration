@@ -10,7 +10,7 @@ set(IDF_PROJECT_EXECUTABLE badgeReader)
 #Add esp32-camera component
 #get_filename_component(
 #    EXTRA_COMPONENT_DIRS
-#   "components/esp32-camera" ABSOLUTE
+#    "components/esp32-camera" ABSOLUTE
 #)
 #list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
@@ -27,13 +27,14 @@ get_filename_component(
 )
 list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
-
 # Add FreeRTOS as a subdirectory. AFR_BOARD tells which board to target.
 set(AFR_BOARD espressif.esp32_devkitc CACHE INTERNAL "")
 
 #Override FreeRTOS config ("Override the configurations for FreeRTOS" section of getting started guide)
 #FreeRTOSConfig.h is added to freertos-configs to disable the use of hook functions.
 include_directories(BEFORE freertos-configs)
+
+include_directories(BEFORE ./include)
 
 add_subdirectory(../amazon-freertos ./build)
 
