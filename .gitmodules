@@ -8,4 +8,3 @@
 [submodule "AprilTagBadgeReader/components/apriltag-component"]
 	path = AprilTagBadgeReader/components/apriltag-component
 	url = git@github.com:enrique-ramkissoon/apriltag-component.git
-
