@@ -97,20 +97,12 @@ esp_err_t capture_image()
         configPRINTF(("Failed to capture image\n"));
         return ESP_FAIL;
     }
-
-        if(!fb)
-        {
-            configPRINTF(("Failed to capture image"));
-            return ESP_FAIL;
-        }
-
         //configPRINTF(("%i\n",fb->len));
         detect_apriltags(fb);
 
         esp_camera_fb_return(fb);
 
         vTaskDelay(pdMS_TO_TICKS(500));
-    }
 
     return ESP_OK;
 }
