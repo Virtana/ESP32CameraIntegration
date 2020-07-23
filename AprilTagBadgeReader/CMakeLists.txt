@@ -8,16 +8,22 @@ add_executable(badgeReader src/abr_main.c src/abr_camera.c src/abr_apriltags.c s
 set(IDF_PROJECT_EXECUTABLE badgeReader)
 
 #Add esp32-camera component
-get_filename_component(
-    EXTRA_COMPONENT_DIRS
-    "components/esp32-camera" ABSOLUTE
-)
-list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
+#get_filename_component(
+#    EXTRA_COMPONENT_DIRS
+#   "components/esp32-camera" ABSOLUTE
+#)
+#list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
 #Add apriltag component
 get_filename_component(
     EXTRA_COMPONENT_DIRS
     "components/apriltag-component" ABSOLUTE
+)
+list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
+
+get_filename_component(
+    EXTRA_COMPONENT_DIRS
+    "../esp32-camera" ABSOLUTE
 )
 list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
