@@ -90,19 +90,23 @@ esp_err_t initialize_camera()
 
 esp_err_t capture_image()
 {
-    camera_fb_t* fb = esp_camera_fb_get();
-
-    if(fb == NULL)
+    while(true)
     {
-        configPRINTF(("Failed to capture image\n"));
-        return ESP_FAIL;
+        camera_fb_t* fb = esp_camera_fb_get();
+
+        if(fb == NULL)
+        {
+            configPRINTF(("Failed to capture image\n"));
+            return ESP_FAIL;
+        }
+            //configPRINTF(("%i\n",fb->len));
+            detect_apriltags(fb);
+
+            esp_camera_fb_return(fb);
+
+            vTaskDelay(pdMS_TO_TICKS(500));
+
     }
-        //configPRINTF(("%i\n",fb->len));
-        detect_apriltags(fb);
-
-        esp_camera_fb_return(fb);
-
-        vTaskDelay(pdMS_TO_TICKS(500));
 
     return ESP_OK;
 }
