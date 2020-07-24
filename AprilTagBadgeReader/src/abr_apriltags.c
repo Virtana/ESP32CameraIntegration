@@ -15,6 +15,8 @@
 #include "esp_wifi.h"
 #include "esp_interface.h"
 
+#define DISPLAY_IMAGES //comment this line to disable drawing marker on frame buffer.
+
 void detect_apriltags(camera_fb_t* fb)
 {   
     image_u8_t* image = NULL;
