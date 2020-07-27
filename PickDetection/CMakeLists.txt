@@ -28,4 +28,5 @@ add_subdirectory(../amazon-freertos ./build)
 target_link_libraries(pickdetection PRIVATE AFR::mqtt 
                                     PRIVATE AFR::demo_mqtt
                                     PRIVATE AFR::demo_base
-                                    PRIVATE AFR::wifi)
+                                    PRIVATE AFR::wifi
+                                    PRIVATE AFR::demo_ble_numeric_comparison)

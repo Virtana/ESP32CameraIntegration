@@ -56,12 +56,7 @@ bool app_motion_detect() {
         }
     }
 
-    ESP_LOGI(TAG,"Changed %d out of %d",changes, blocks);
-
-    return (1.0 * changes / blocks) > IMAGE_DIFF_THRESHOLD;
-}
-
-void app_update_frame() {
+    ESP_LOGI(TAG,"Changed %d out of %d",changes, blocks);PRIVATE AFR::mqtt
     for (int y = 0; y < H; y++) {
         for (int x = 0; x < W; x++) {
             prev_frame[y][x] = current_frame[y][x];
