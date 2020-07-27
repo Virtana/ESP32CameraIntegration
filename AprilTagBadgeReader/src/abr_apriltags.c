@@ -8,6 +8,8 @@
 #include "zarray.h"
 #include "pjpeg.h"
 
+#include "esp_camera.h"
+#include "img_converters.h"
 
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
@@ -15,7 +17,13 @@
 #include "esp_wifi.h"
 #include "esp_interface.h"
 
-#define DISPLAY_IMAGES //comment this line to disable drawing marker on frame buffer.
+#define DRAW_MARKERS
+
+
+int coord_to_index(float x,float y,int w_img, int h_img)
+{
+    return((int)( (y*w_img)+x -1));
+}
 
 void detect_apriltags(camera_fb_t* fb)
 {   
@@ -103,17 +111,19 @@ void detect_apriltags(camera_fb_t* fb)
             zarray_get(detections,i,&detection);
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
-
+        
+            //#ifndef DRAW_MARKERS //if draw markers is enabled, detection will be destroyed after marker is drawn to fb
             apriltag_detection_destroy(detection);
+            //#endif
         }
     }
 
     configPRINTF(("\n"));
 
     //Free resources
-    zarray_destroy(detections);
     image_u8_destroy(image);
     tag36h11_destroy(family);
     apriltag_detector_destroy(detector);
+    zarray_destroy(detections);
 
 }

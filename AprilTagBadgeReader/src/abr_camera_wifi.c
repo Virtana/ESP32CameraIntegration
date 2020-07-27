@@ -130,23 +130,6 @@ void wifi_init_softap()
              EXAMPLE_ESP_WIFI_AP_SSID, EXAMPLE_ESP_WIFI_AP_PASS);
 }
 
-/*
-void wifi_init_sta()
-{
-    configPRINTF(("Initializing as STA\n"));
-    wifi_config_t wifi_config;
-    memset(&wifi_config, 0, sizeof(wifi_config_t));
-    snprintf((char*)wifi_config.sta.ssid, 32, "%s", EXAMPLE_ESP_WIFI_SSID);
-    snprintf((char*)wifi_config.sta.password, 64, "%s", EXAMPLE_ESP_WIFI_PASS);
-
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-    ESP_LOGI(TAG, "connect to ap SSID:%s password:%s",
-             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-}
-*/
-
 void wifi_init_sta()
 {
     configPRINTF(("Trying to initialize as STA ? .. This should never run\n"));

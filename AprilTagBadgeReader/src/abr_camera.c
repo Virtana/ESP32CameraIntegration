@@ -45,7 +45,7 @@ esp_err_t initialize_camera()
     config.xclk_freq_hz = 20000000; //20MHz
 
     config.pixel_format = PIXFORMAT_JPEG;
-    config.frame_size = FRAMESIZE_VGA; // VGA = 640x480  (see sensors.h)
+    config.frame_size = FRAMESIZE_QVGA; // VGA = 640x480  (see sensors.h)
 
     /* USING GRAYSCALE:
         FRAMESIZE_QVGA (320X240px) - stable| inconsistent detection when image is taken at an angle. Takes ~1 second per detection
