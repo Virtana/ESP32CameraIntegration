@@ -24,6 +24,7 @@
 #include "abr_camera.h"
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
+#include "abr_mqtt.h"
 
 //#define DISPLAY_IMAGES //comment this line to skip displaying images.
 
@@ -63,136 +64,11 @@ static void prvMiscInitialization( void )
 #endif
 }
 
-int initialize_mqtt()
-{
-    IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
-
-    mqttInitStatus = IotMqtt_Init();
-
-    if(mqttInitStatus != IOT_MQTT_SUCCESS)
-    {
-        configPRINTF(("Failed to initialize MQTT\n"));
-        return EXIT_FAILURE;
-    }
-
-    return IOT_MQTT_SUCCESS;
-}
-
-int connect_mqtt(bool awsIotMqttMode, const char* pIdentifier, void* pNetworkServerInfo, void* pNetworkCredentialInfo, const IotNetworkInterface_t* pNetworkInterface, IotMqttConnection_t* pMqttConnection)
-{
-    int status = EXIT_SUCCESS;
-    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
-    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
-    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    char pClientIdentifierBuffer[ CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
-
-    /* Set the members of the network info not set by the initializer. This
-     * struct provided information on the transport layer to the MQTT connection. */
-    networkInfo.createNetworkConnection = true;
-    networkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
-    networkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
-    networkInfo.pNetworkInterface = pNetworkInterface;
-
-    #if ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 ) && defined( IOT_DEMO_MQTT_SERIALIZER )
-        networkInfo.pMqttSerializer = IOT_DEMO_MQTT_SERIALIZER;
-    #endif
-
-    /* Set the members of the connection info not set by the initializer. */
-    connectInfo.awsIotMqttMode = awsIotMqttMode;
-    connectInfo.cleanSession = true;
-    connectInfo.keepAliveSeconds = 60;
-
-    /* Use the parameter client identifier if provided. Otherwise, generate a
-     * unique client identifier. */
-    if( ( pIdentifier != NULL ) && ( pIdentifier[ 0 ] != '\0' ) )
-    {
-        connectInfo.pClientIdentifier = pIdentifier;
-        connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
-    }
-    else
-    {
-        /* Every active MQTT connection must have a unique client identifier. The demos
-         * generate this unique client identifier by appending a timestamp to a common
-         * prefix. */
-        status = snprintf( pClientIdentifierBuffer,
-                           CLIENT_IDENTIFIER_MAX_LENGTH,
-                           CLIENT_IDENTIFIER_PREFIX "%lu",
-                           ( long unsigned int ) IotClock_GetTimeMs() );
-
-        /* Check for errors from snprintf. */
-        if( status < 0 )
-        {
-            IotLogError( "Failed to generate unique client identifier for demo." );
-            status = EXIT_FAILURE;
-        }
-        else
-        {
-            /* Set the client identifier buffer and length. */
-            connectInfo.pClientIdentifier = pClientIdentifierBuffer;
-            connectInfo.clientIdentifierLength = ( uint16_t ) status;
-
-            status = EXIT_SUCCESS;
-        }
-    }
-
-    /* Establish the MQTT connection. */
-    if( status == EXIT_SUCCESS )
-    {
-        IotLogInfo( "MQTT demo client identifier is %.*s (length %hu).",
-                    connectInfo.clientIdentifierLength,
-                    connectInfo.pClientIdentifier,
-                    connectInfo.clientIdentifierLength );
-
-        connectStatus = IotMqtt_Connect( &networkInfo,
-                                         &connectInfo,
-                                         MQTT_TIMEOUT_MS,
-                                         pMqttConnection );
-
-        if( connectStatus != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "MQTT CONNECT returned error %s.",
-                         IotMqtt_strerror( connectStatus ) );
-
-            status = EXIT_FAILURE;
-        }
-    }
-
-    return status;
-}
 
 int app_main(void)
 {
     prvMiscInitialization();
-
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-
-    const char* topic = "badge_reader/topic/1";
-
-    uint32_t network = AWSIOT_NETWORK_TYPE_WIFI;
-    pNetworkInterface = AwsIotNetworkManager_GetNetworkInterface(network);
-    pConnectionParams = AwsIotNetworkManager_GetConnectionParams(network);
-    pCredentials = AwsIotNetworkManager_GetCredentials(network),
-
-    int status = initialize_mqtt();
-    
-    if(status == EXIT_FAILURE)
-    {
-        configPRINTF(("Failed to initialize mqtt\n"));
-        return -1;
-    }
-
-    status = connect_mqtt(true,clientcredentialIOT_THING_NAME,AwsIotNetworkManager_GetConnectionParams(network),AwsIotNetworkManager_GetCredentials(network),AwsIotNetworkManager_GetNetworkInterface(network),mqttConnection);
-
-    if(status == EXIT_FAILURE)
-    {
-        configPRINTF(("MQTT Failed to connect\n"));
-        return -1;
-    }
-
-    IotMqtt_TimedSubscribe( mqttConnection, pSubscriptions,TOPIC_FILTER_COUNT,0,MQTT_TIMEOUT_MS );
-
-
+    mqtt_main();
 
     #ifdef DISPLAY_IMAGES
         initialize_camera();
