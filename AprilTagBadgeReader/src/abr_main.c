@@ -22,7 +22,7 @@
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
 
-#define DISPLAY_IMAGES //comment this line to skip displaying images.
+//#define DISPLAY_IMAGES //comment this line to skip displaying images.
 
 #ifdef DISPLAY_IMAGES
     #include "abr_camera_wifi.h"
