@@ -62,7 +62,7 @@ esp_err_t initialize_camera()
 
     /* ON ESP-EYE, IO13, IO14 is designed for JTAG by default,
      * to use it as generalized input,
-     * firstly declair it as pullup input */
+     * firstly declare it as pullup input */
     gpio_config_t conf;
     conf.mode = GPIO_MODE_INPUT;
     conf.pull_up_en = GPIO_PULLUP_ENABLE;

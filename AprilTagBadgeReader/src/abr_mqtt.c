@@ -35,9 +35,32 @@
 #define PUBLISH_RETRY_MS ( 1000 )
 #define CLIENT_IDENTIFIER_MAX_LENGTH ( 24 )
 #define CLIENT_IDENTIFIER_PREFIX "badgeReader"
+#define KEEP_ALIVE_SECONDS  ( 60 )
+#define WILL_TOPIC_NAME  IOT_DEMO_MQTT_TOPIC_PREFIX "/will"
+#define WILL_TOPIC_NAME_LENGTH  ( ( uint16_t ) (sizeof( WILL_TOPIC_NAME ) - 1 ))
+#define WILL_MESSAGE                             "MQTT demo unexpectedly disconnected."
+#define WILL_MESSAGE_LENGTH                      ( ( size_t ) ( sizeof( WILL_MESSAGE ) - 1 ) )
+
 
 int initialize_mqtt()
 {
+    if(IotSdk_Init() == false)
+    {
+        configPRINTF(("Failed to initialize Iot SDK\n"));
+    }
+
+    if(AwsIotNetworkManager_Init() == false)
+    {
+        configPRINTF(("Failed to Initialize Network"));
+    }
+
+    if( AwsIotNetworkManager_EnableNetwork( configENABLED_NETWORKS ) != configENABLED_NETWORKS )
+    {
+            IotLogError( "Failed to initialize all the networks configured for the device." );
+            int status = EXIT_FAILURE;
+            return status;
+    }
+
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
 
     mqttInitStatus = IotMqtt_Init();
@@ -57,6 +80,7 @@ int connect_mqtt(bool awsIotMqttMode, const char* pIdentifier, void* pNetworkSer
     IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     char pClientIdentifierBuffer[ CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
 
     /* Set the members of the network info not set by the initializer. This
@@ -73,7 +97,16 @@ int connect_mqtt(bool awsIotMqttMode, const char* pIdentifier, void* pNetworkSer
     /* Set the members of the connection info not set by the initializer. */
     connectInfo.awsIotMqttMode = awsIotMqttMode;
     connectInfo.cleanSession = true;
-    connectInfo.keepAliveSeconds = 60;
+    connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
+    connectInfo.pWillInfo = &willInfo;
+
+    /* Set the members of the Last Will and Testament (LWT) message info. The
+     * MQTT server will publish the LWT message if this client disconnects
+     * unexpectedly. */
+    willInfo.pTopicName = WILL_TOPIC_NAME;
+    willInfo.topicNameLength = WILL_TOPIC_NAME_LENGTH;
+    willInfo.pPayload = WILL_MESSAGE;
+    willInfo.payloadLength = WILL_MESSAGE_LENGTH;
 
     /* Use the parameter client identifier if provided. Otherwise, generate a
      * unique client identifier. */
@@ -116,10 +149,12 @@ int connect_mqtt(bool awsIotMqttMode, const char* pIdentifier, void* pNetworkSer
                     connectInfo.pClientIdentifier,
                     connectInfo.clientIdentifierLength );
 
+        printf("TESTTESTTESTTEST\n");
         connectStatus = IotMqtt_Connect( &networkInfo,
                                          &connectInfo,
                                          MQTT_TIMEOUT_MS,
                                          pMqttConnection );
+        printf("TES2\n");
 
         if( connectStatus != IOT_MQTT_SUCCESS )
         {
@@ -246,7 +281,7 @@ int publish(IotMqttConnection_t mqttConnection,const char ** pTopicNames)
 
 void mqtt_main()
 {
-     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     const char* topics[TOPIC_FILTER_COUNT] = 
     {
@@ -262,6 +297,7 @@ void mqtt_main()
     //pCredentials = AwsIotNetworkManager_GetCredentials(network),
 
     int status = initialize_mqtt();
+    //printf("MQTT Successfully Initialized\n");
     
     if(status == EXIT_FAILURE)
     {
@@ -274,10 +310,16 @@ void mqtt_main()
     if(status == EXIT_FAILURE)
     {
         configPRINTF(("MQTT Failed to connect\n"));
-        return -1;
+        return;
+    }
+    else
+    {
+        configPRINTF(("Successfully connected to MQTT\n"));
     }
 
     modify_subscriptions(mqttConnection,IOT_MQTT_SUBSCRIBE,topics);
+
+    configPRINTF(("Successfully modified subscriptions\n"));
 
     publish(mqttConnection,topics);
 
