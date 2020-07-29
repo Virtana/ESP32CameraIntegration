@@ -62,6 +62,7 @@ static void prvMiscInitialization( void )
     configPRINTF( ("Initializing FreeRTOS TCP stack\r\n") );
     vApplicationIPInit();
 #endif
+
 }
 
 
