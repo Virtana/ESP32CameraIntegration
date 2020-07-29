@@ -3,6 +3,8 @@
 #include "esp_log.h"
 #include "math.h"
 #include "pickdet_motion.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 static const char *TAG = "motion_detect";
 
@@ -84,5 +86,16 @@ void pickdet_motion_solo(){
             if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
             app_update_frame();
         }
+    }
+}
+
+void pickdet_motion_detect(){
+    while (1)
+    {
+        app_capture_still();
+        if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+        app_update_frame();
+        vTaskDelay(100 / portTICK_RATE_MS);
+        ESP_LOGI(TAG, "=============================");
     }
 }
