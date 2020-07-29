@@ -2,6 +2,8 @@
 #include "esp_camera.h"
 #include "math.h"
 #include "pickdet_motion.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 static const char *TAG = "STATUS";
 
@@ -79,5 +81,16 @@ void print_frame(uint16_t frame[H][W]) {
         for (int x = 0; x < W; x++) {
             ESP_LOGI(TAG,"%hu\t\n",frame[y][x]);
         }
+    }
+}
+
+void pickdet_motion_detect(){
+    while (1)
+    {
+        app_capture_still();
+        if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+        app_update_frame();
+        vTaskDelay(100 / portTICK_RATE_MS);
+        ESP_LOGI(TAG, "=============================");
     }
 }

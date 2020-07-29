@@ -4,7 +4,7 @@ project(PickDetection)
 
 include_directories(include)
 
-add_executable(pickdetection src/pickdet_main.c src/pickdet_camera.c src/pickdet_motion.c)
+add_executable(pickdetection src/main.c src/pickdet_camera.c src/pickdet_motion.c)
 
 # Tell IDF build to link against this target.
 set(IDF_PROJECT_EXECUTABLE pickdetection)

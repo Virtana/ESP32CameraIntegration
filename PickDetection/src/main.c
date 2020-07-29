@@ -126,16 +126,7 @@ int app_main( void )
     if( SYSTEM_Init() == pdPASS )
     {
         pickdet_cam_init();
-        
-        while (1)
-            {
-                app_capture_still();
-                if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
-                app_update_frame();
-                vTaskDelay(100 / portTICK_RATE_MS);
-                ESP_LOGI(TAG, "=============================");
-
-            }
-        }
+        xTaskCreate(pickdet_motion_detect, "Motion Detection",10000,NULL,1,NULL);
+    }   
     return 0;
 }

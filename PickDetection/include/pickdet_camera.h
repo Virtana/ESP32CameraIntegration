@@ -1,6 +1,3 @@
-#ifndef _PICKDET_CAM_H_
-#define _PICKDET_CAM_H_
-
 /* CONFIG_CAMERA_MODEL_ESP_EYE  */
 #define PWDN_GPIO_NUM    -1
 #define RESET_GPIO_NUM   -1
@@ -48,5 +45,3 @@
 #define XCLK_FREQ       20000000
 
 void pickdet_cam_init();
-
-#endif
