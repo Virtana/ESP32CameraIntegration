@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(AprilTagBadgeReader)
 
-add_executable(badgeReader src/abr_main.c src/abr_camera.c src/abr_apriltags.c src/abr_display_image.c src/abr_camera_wifi.c src/abr_mqtt.c)
+add_executable(badgeReader src/abr_main.c src/abr_camera.c src/abr_apriltags.c src/abr_display_image.c src/abr_camera_wifi.c src/abr_mqtt.c src/abr_mqtt_init.c)
 
 # Tell IDF build to link against this target.
 set(IDF_PROJECT_EXECUTABLE badgeReader)

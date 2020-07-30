@@ -24,7 +24,7 @@
 #include "abr_camera.h"
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
-#include "abr_mqtt.h"
+#include "abr_mqtt_init.h"
 
 //#define DISPLAY_IMAGES //comment this line to skip displaying images.
 
@@ -69,7 +69,11 @@ static void prvMiscInitialization( void )
 int app_main(void)
 {
     prvMiscInitialization();
-    mqtt_main();
+    
+    if(SYSTEM_Init() == pdPASS)
+    {
+        mqtt_main();
+    }
 
     #ifdef DISPLAY_IMAGES
         initialize_camera();
