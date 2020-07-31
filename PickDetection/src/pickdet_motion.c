@@ -90,12 +90,12 @@ void pickdet_motion_solo(){
 }
 
 void pickdet_motion_detect(){
-    while (1)
+    while (true)
     {
         app_capture_still();
         if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
         app_update_frame();
-        vTaskDelay(100 / portTICK_RATE_MS);
-        ESP_LOGI(TAG, "=============================");
+        //vTaskDelay(100 / portTICK_RATE_MS);
+        // ESP_LOGI(TAG, "=============================");
     }
 }
