@@ -164,26 +164,15 @@ int run_mqtt( bool awsIotMqttMode,
 static void _operationCompleteCallback( void * param1,
                                         IotMqttCallbackParam_t * const pOperation )
 {
-    intptr_t publishCount = ( intptr_t ) param1;
-
-    /* Silence warnings about unused variables. publishCount will not be used if
-     * logging is disabled. */
-    ( void ) publishCount;
-
     /* Print the status of the completed operation. A PUBLISH operation is
      * successful when transmitted over the network. */
     if( pOperation->u.operation.result == IOT_MQTT_SUCCESS )
     {
-        IotLogInfo( "MQTT %s %d successfully sent.",
-                    IotMqtt_OperationType( pOperation->u.operation.type ),
-                    ( int ) publishCount );
+        IotLogInfo("MQTT publish successfully sent");
     }
     else
     {
-        IotLogError( "MQTT %s %d could not be sent. Error %s.",
-                     IotMqtt_OperationType( pOperation->u.operation.type ),
-                     ( int ) publishCount,
-                     IotMqtt_strerror( pOperation->u.operation.result ) );
+        IotLogError("MQTT publish failed");
     }
 }
 
@@ -578,7 +567,6 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
                                 IotSemaphore_t * pPublishReceivedCounter )
 {
     int status = EXIT_SUCCESS;
-    intptr_t publishCount = 0, i = 0;
     IotMqttError_t publishStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotMqttCallbackInfo_t publishComplete = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
@@ -595,39 +583,26 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
     publishInfo.retryMs = PUBLISH_RETRY_MS;
     publishInfo.retryLimit = PUBLISH_RETRY_LIMIT;
 
-    /* Loop to PUBLISH all messages of this demo. */
-    for( publishCount = 0;
-         publishCount < IOT_DEMO_MQTT_PUBLISH_BURST_SIZE * IOT_DEMO_MQTT_PUBLISH_BURST_COUNT;
-         publishCount++ )
-    {
-        /* Announce which burst of messages is being published. */
-        if( publishCount % IOT_DEMO_MQTT_PUBLISH_BURST_SIZE == 0 )
-        {
-            IotLogInfo( "Publishing messages %d to %d.",
-                        publishCount,
-                        publishCount + IOT_DEMO_MQTT_PUBLISH_BURST_SIZE - 1 );
-        }
+    IotLogInfo("Publishing message:");
 
         /* Pass the PUBLISH number to the operation complete callback. */
-        publishComplete.pCallbackContext = ( void * ) publishCount;
+        publishComplete.pCallbackContext = NULL;
 
         /* Choose a topic name (round-robin through the array of topic names). */
-        publishInfo.pTopicName = pTopicNames[ publishCount % TOPIC_FILTER_COUNT ];
+        publishInfo.pTopicName = pTopicNames[0];
+
+        char format[] = {"PublishTest"};
 
         /* Generate the payload for the PUBLISH. */
-        status = snprintf( pPublishPayload,
-                           PUBLISH_PAYLOAD_BUFFER_LENGTH,
-                           PUBLISH_PAYLOAD_FORMAT,
-                           ( int ) publishCount );
+        status = snprintf( pPublishPayload,sizeof(format),format);
 
         /* Check for errors from snprintf. */
         if( status < 0 )
         {
-            IotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH %d.",
-                         ( int ) publishCount );
+            IotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH" );
             status = EXIT_FAILURE;
 
-            break;
+            return status;
         }
         else
         {
@@ -645,45 +620,11 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
 
         if( publishStatus != IOT_MQTT_STATUS_PENDING )
         {
-            IotLogError( "MQTT PUBLISH %d returned error %s.",
-                         ( int ) publishCount,
-                         IotMqtt_strerror( publishStatus ) );
+            IotLogError("MQTT Publish not pending.");
             status = EXIT_FAILURE;
 
-            break;
+            return status;
         }
-
-        /* If a complete burst of messages has been published, wait for an equal
-         * number of messages to be received. Note that messages may be received
-         * out-of-order, especially if a message was lost and had to be retried. */
-        if( ( publishCount % IOT_DEMO_MQTT_PUBLISH_BURST_SIZE ) ==
-            ( IOT_DEMO_MQTT_PUBLISH_BURST_SIZE - 1 ) )
-        {
-            IotLogInfo( "Waiting for %d publishes to be received.",
-                        IOT_DEMO_MQTT_PUBLISH_BURST_SIZE );
-
-            for( i = 0; i < IOT_DEMO_MQTT_PUBLISH_BURST_SIZE; i++ )
-            {
-                if( IotSemaphore_TimedWait( pPublishReceivedCounter,
-                                            MQTT_TIMEOUT_MS ) == false )
-                {
-                    IotLogError( "Timed out waiting for incoming PUBLISH messages." );
-                    status = EXIT_FAILURE;
-                    break;
-                }
-            }
-
-            IotLogInfo( "%d publishes received.",
-                        i );
-        }
-
-        /* Stop publishing if there was an error. */
-        if( status == EXIT_FAILURE )
-        {
-            break;
-        }
-    }
-
     return status;
 }
 
