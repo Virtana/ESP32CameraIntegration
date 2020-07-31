@@ -457,8 +457,7 @@ static int _establishMqttConnection( bool awsIotMqttMode,
  */
 static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
                                  IotMqttOperationType_t operation,
-                                 const char ** pTopicFilters,
-                                 void * pCallbackParameter )
+                                 const char ** pTopicFilters)
 {
     int status = EXIT_SUCCESS;
     int32_t i = 0;
@@ -471,7 +470,7 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
         pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
         pSubscriptions[ i ].pTopicFilter = pTopicFilters[ i ];
         pSubscriptions[ i ].topicFilterLength = TOPIC_FILTER_LENGTH;
-        pSubscriptions[ i ].callback.pCallbackContext = pCallbackParameter;
+        pSubscriptions[ i ].callback.pCallbackContext = NULL;
         pSubscriptions[ i ].callback.function = _mqttSubscriptionCallback;
     }
 
@@ -563,8 +562,7 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
  * otherwise.
  */
 static int _publishAllMessages( IotMqttConnection_t mqttConnection,
-                                const char ** pTopicNames,
-                                IotSemaphore_t * pPublishReceivedCounter )
+                                const char ** pTopicNames)
 {
     int status = EXIT_SUCCESS;
     IotMqttError_t publishStatus = IOT_MQTT_STATUS_PENDING;
@@ -656,17 +654,10 @@ int run_mqtt( bool awsIotMqttMode,
     /* Handle of the MQTT connection used in this demo. */
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
-    /* Counts the number of incoming PUBLISHES received (and allows the demo
-     * application to wait on incoming PUBLISH messages). */
-    IotSemaphore_t publishesReceived;
-
     /* Topics used as both topic filters and topic names in this demo. */
     const char * pTopics[ TOPIC_FILTER_COUNT ] =
     {
         IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/1",
-        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/2",
-        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/3",
-        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/4",
     };
 
     /* Flags for tracking which cleanup functions must be called. */
@@ -695,32 +686,14 @@ int run_mqtt( bool awsIotMqttMode,
         connectionEstablished = true;
 
         /* Add the topic filter subscriptions used in this demo. */
-        status = _modifySubscriptions( mqttConnection,
-                                       IOT_MQTT_SUBSCRIBE,
-                                       pTopics,
-                                       &publishesReceived );
+        status = _modifySubscriptions( mqttConnection,IOT_MQTT_SUBSCRIBE,pTopics);
     }
 
     if( status == EXIT_SUCCESS )
     {
-        /* Create the semaphore to count incoming PUBLISH messages. */
-        if( IotSemaphore_Create( &publishesReceived,
-                                 0,
-                                 IOT_DEMO_MQTT_PUBLISH_BURST_SIZE ) == true )
-        {
-            /* PUBLISH (and wait) for all messages. */
-            status = _publishAllMessages( mqttConnection,
-                                          pTopics,
-                                          &publishesReceived );
+        /* PUBLISH (and wait) for all messages. */
+        status = _publishAllMessages( mqttConnection,pTopics);
 
-            /* Destroy the incoming PUBLISH counter. */
-            IotSemaphore_Destroy( &publishesReceived );
-        }
-        else
-        {
-            /* Failed to create incoming PUBLISH counter. */
-            status = EXIT_FAILURE;
-        }
     }
 
     if( status == EXIT_SUCCESS )
@@ -728,8 +701,7 @@ int run_mqtt( bool awsIotMqttMode,
         /* Remove the topic subscription filters used in this demo. */
         status = _modifySubscriptions( mqttConnection,
                                        IOT_MQTT_UNSUBSCRIBE,
-                                       pTopics,
-                                       NULL );
+                                       pTopics);
     }
 
     /* Disconnect the MQTT connection if it was established. */
