@@ -1,28 +1,20 @@
-#include "esp_log.h"
-#include "esp_camera.h"
-#include "math.h"
-#include "pickdet_motion.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "esp_log.h"
+#include "math.h"
+#include "pickdet_motion.h"
 
-static const char *TAG = "STATUS";
+static const char *TAG = "motion_detect";
 
 uint16_t current_frame[H][W] = { 0 };
 uint16_t prev_frame[H][W] = { 0 };
 
-void app_capture_still() {
-    camera_fb_t *fb = esp_camera_fb_get();
-
-    if (!fb)
-        return false;
-
+void app_downsample(camera_fb_t *fb) {
     // set all 0s in current frame
     //Initializing pixel values in fb to prepare for image capture
     for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++)
-            current_frame[y][x] = 0;
-
-    ESP_LOGI(TAG, "Taking picture...");        
+            current_frame[y][x] = 0;   
 
 
     // down-sample image in blocks
@@ -44,7 +36,7 @@ void app_capture_still() {
         for (int x = 0; x < W; x++)
             current_frame[y][x] /= BLOCK_SIZE * BLOCK_SIZE;
     
-    ESP_LOGI(TAG, "Downsampling picture...");
+    // ESP_LOGI(TAG, "Downsampling picture...");
 }
 
 
@@ -77,21 +69,25 @@ void app_update_frame() {
     }
 }
 
-void print_frame(uint16_t frame[H][W]) {
-    for (int y = 0; y < H; y++) {
-        for (int x = 0; x < W; x++) {
-            ESP_LOGI(TAG,"%hu\t\n",frame[y][x]);
-        }
-    }
+void pickdet_motion_detect(camera_fb_t *fb){
+    app_downsample(fb);
+    if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+    app_update_frame();
+    ESP_LOGI(TAG, "=============================");
 }
 
-void pickdet_motion_detect(){
-    while (true)
-    {
-        app_capture_still();
-        if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
-        app_update_frame();
-        //vTaskDelay(100 / portTICK_RATE_MS);
-        // ESP_LOGI(TAG, "=============================");
+void pickdet_motion_solo(){
+    while(true){
+        camera_fb_t *fb = esp_camera_fb_get();
+        if (!fb)
+        {
+            ESP_LOGE(TAG, "Camera capture failed");
+            break;
+        }
+        else{
+            app_downsample(fb);
+            if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+            app_update_frame();
+        }
     }
 }
