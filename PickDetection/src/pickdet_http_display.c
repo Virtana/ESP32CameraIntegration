@@ -1,6 +1,7 @@
 #include "pickdet_http_display.h"
+#include "pickdet_motion.h"
 
-static const char* TAG = "pickdet_http_display";
+static const char* TAG = "http_display";
 httpd_handle_t camera_httpd = NULL;
 
 esp_err_t stream_handler(httpd_req_t *req)
@@ -92,9 +93,9 @@ esp_err_t stream_handler(httpd_req_t *req)
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-         ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",
-            (uint32_t)(_jpg_buf_len/1024),
-            (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
+        //  ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",
+            // (uint32_t)(_jpg_buf_len/1024),
+            // (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
     }
 
     last_frame = 0;
