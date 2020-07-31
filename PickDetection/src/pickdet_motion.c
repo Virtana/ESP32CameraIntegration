@@ -11,9 +11,9 @@ uint16_t current_frame[H][W] = { 0 };
 uint16_t prev_frame[H][W] = { 0 };
 
 void app_capture_still() {
-    camera_fb_t *frame_buffer = esp_camera_fb_get();
+    camera_fb_t *fb = esp_camera_fb_get();
 
-    if (!frame_buffer)
+    if (!fb)
         return false;
 
     // set all 0s in current frame
@@ -31,7 +31,8 @@ void app_capture_still() {
         const uint16_t y = floor(i / WIDTH);
         const uint8_t block_x = floor(x / BLOCK_SIZE);
         const uint8_t block_y = floor(y / BLOCK_SIZE);
-        const uint8_t pixel = frame_buffer->buf[i];
+        const uint8_t pixel = fb->buf[i];
+        esp_camera_fb_return(fb);
         // const uint16_t current = current_frame[block_y][block_x];
 
         // average pixels in block (accumulate)
@@ -85,12 +86,12 @@ void print_frame(uint16_t frame[H][W]) {
 }
 
 void pickdet_motion_detect(){
-    while (1)
+    while (true)
     {
         app_capture_still();
         if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
         app_update_frame();
-        vTaskDelay(100 / portTICK_RATE_MS);
-        ESP_LOGI(TAG, "=============================");
+        //vTaskDelay(100 / portTICK_RATE_MS);
+        // ESP_LOGI(TAG, "=============================");
     }
 }

@@ -1,5 +1,5 @@
 //change according to resolution chosen in pickdet_camera.h
-#define WIDTH 320 
+#define WIDTH 320
 #define HEIGHT 240
 #define BLOCK_SIZE 10
 #define W (WIDTH / BLOCK_SIZE)
