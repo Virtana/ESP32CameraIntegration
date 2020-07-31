@@ -10,5 +10,3 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 esp_err_t stream_handler(httpd_req_t *req);
 void pickdet_http_main();
-void pickdet_display();
-

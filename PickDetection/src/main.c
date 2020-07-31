@@ -58,6 +58,9 @@
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
 #define mainLOGGING_TASK_STACK_SIZE         ( configMINIMAL_STACK_SIZE * 4 )
 
+//uncomment for streaming with motion detection 
+//#define HTTP_STREAM
+
 static const char *TAG = "STATUS";
 
 /*-----------------------------------------------------------*/
@@ -122,14 +125,15 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 int app_main( void )
 {
     prvMiscInitialization();
-    pickdet_cam_init();
-    pickdet_wifi_main();
-
     if( SYSTEM_Init() == pdPASS )
-    {
-        Iot_CreateDetachedThread(pickdet_motion_detect, NULL,tskIDLE_PRIORITY+2,3*configMINIMAL_STACK_SIZE);
-        Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
-
+    {   
+        pickdet_cam_init();
+        pickdet_wifi_main();
+        #ifdef HTTP_STREAM
+            Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        #else
+            Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        #endif
     }   
     return 0;
 }
