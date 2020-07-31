@@ -83,10 +83,10 @@ int app_main(void)
 
     #ifndef DISPLAY_IMAGES
 
-        initialize_camera();
+        //initialize_camera();
 
         //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-        xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
+        //xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
     #endif
 
     return 0;

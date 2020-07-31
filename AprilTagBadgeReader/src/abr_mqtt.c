@@ -19,7 +19,7 @@
 #include "abr_mqtt.h"
 
 #ifndef IOT_DEMO_MQTT_TOPIC_PREFIX
-    #define IOT_DEMO_MQTT_TOPIC_PREFIX           "iotdemo"
+    #define IOT_DEMO_MQTT_TOPIC_PREFIX           "badgeReader"
 #endif
 #ifndef IOT_DEMO_MQTT_PUBLISH_BURST_SIZE
     #define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 )
@@ -44,7 +44,7 @@
  * This prefix is also used to generate topic names and topic filters used in this
  * demo.
  */
-#define CLIENT_IDENTIFIER_PREFIX                 "iotdemo"
+#define CLIENT_IDENTIFIER_PREFIX                 "badgeReader"
 
 /**
  * @brief The longest client identifier that an MQTT server must accept (as defined
@@ -91,7 +91,7 @@
 /**
  * @brief How many topic filters will be used in this demo.
  */
-#define TOPIC_FILTER_COUNT                       ( 4 )
+#define TOPIC_FILTER_COUNT                       ( 1 )
 
 /**
  * @brief The length of each topic filter.
@@ -723,9 +723,9 @@ int run_mqtt( bool awsIotMqttMode,
     const char * pTopics[ TOPIC_FILTER_COUNT ] =
     {
         IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/1",
-        IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/2",
-        IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/3",
-        IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/4",
+        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/2",
+        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/3",
+        //IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/4",
     };
 
     /* Flags for tracking which cleanup functions must be called. */
