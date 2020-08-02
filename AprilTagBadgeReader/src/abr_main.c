@@ -4,6 +4,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 
 /* AWS System includes. */
@@ -25,8 +26,13 @@
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
 #include "abr_mqtt_init.h"
+#include "abr_mqtt.h"
+
+#include "stdio.h"
 
 //#define DISPLAY_IMAGES //comment this line to skip displaying images.
+
+QueueHandle_t queue_handle;
 
 #ifdef DISPLAY_IMAGES
     #include "abr_camera_wifi.h"
@@ -69,10 +75,20 @@ static void prvMiscInitialization( void )
 int app_main(void)
 {
     prvMiscInitialization();
-    
+
+    queue_handle = xQueueCreate(5,sizeof(uint32_t)); //holds 10 detected tags.
+
+    if(queue_handle == NULL)
+    {
+        configPRINTF(("Failed to create queue\n"));
+        return -1;
+    }
+
+    printf("QUEUE DEBUG: %i\n", uxQueueMessagesWaiting(queue_handle));
+
     if(SYSTEM_Init() == pdPASS)
     {
-        mqtt_main();
+        mqtt_main(&queue_handle);
     }
 
     #ifdef DISPLAY_IMAGES
@@ -82,11 +98,10 @@ int app_main(void)
     #endif
 
     #ifndef DISPLAY_IMAGES
-
-        //initialize_camera();
+        initialize_camera();
 
         //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-        //xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
+        xTaskCreate(capture_image,"CaptureImageTask",750000,(void*)&queue_handle,4,NULL);
     #endif
 
     return 0;

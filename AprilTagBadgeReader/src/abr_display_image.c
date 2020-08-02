@@ -117,7 +117,7 @@ esp_err_t stream_images_handler(httpd_req_t *req)
         _jpg_buf = fb->buf;
 
         //DETECT APRILTAGS IN IMAGE
-        detect_apriltags(fb);
+        detect_apriltags(fb,NULL);
 
         if(res == ESP_OK){
             res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));

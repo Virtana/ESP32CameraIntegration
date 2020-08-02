@@ -1,5 +1,7 @@
 
 #include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 #include "abr_apriltags.h"
 
@@ -17,15 +19,11 @@
 #include "esp_wifi.h"
 #include "esp_interface.h"
 
+#include "abr_mqtt.h"
+
 #define DRAW_MARKERS
 
-
-int coord_to_index(float x,float y,int w_img, int h_img)
-{
-    return((int)( (y*w_img)+x -1));
-}
-
-void detect_apriltags(camera_fb_t* fb)
+void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 {   
     image_u8_t* image = NULL;
 
@@ -111,10 +109,19 @@ void detect_apriltags(camera_fb_t* fb)
             zarray_get(detections,i,&detection);
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
+
+            uint32_t detected_id = detection->id;
+
+            if(queue_handle!=NULL)
+            {
+                configPRINTF(("Sending to queue\n"));
+                xQueueSend(*queue_handle,(void*)&detected_id,pdMS_TO_TICKS(500));
+            }
+
+            //apriltag_detected_id = detection -> id;
+            //publish_message= true;
         
-            //#ifndef DRAW_MARKERS //if draw markers is enabled, detection will be destroyed after marker is drawn to fb
             apriltag_detection_destroy(detection);
-            //#endif
         }
     }
 

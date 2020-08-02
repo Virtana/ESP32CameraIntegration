@@ -1,6 +1,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 #include "abr_camera.h"
 #include "abr_apriltags.h"
@@ -88,7 +89,7 @@ esp_err_t initialize_camera()
 }
 
 
-esp_err_t capture_image()
+void capture_image(void* pvParameters)
 {
     while(true)
     {
@@ -97,16 +98,16 @@ esp_err_t capture_image()
         if(fb == NULL)
         {
             configPRINTF(("Failed to capture image\n"));
-            return ESP_FAIL;
+            return;
         }
             //configPRINTF(("%i\n",fb->len));
-            detect_apriltags(fb);
+            detect_apriltags(fb,(QueueHandle_t*)pvParameters);
 
             esp_camera_fb_return(fb);
 
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(1000));
 
     }
 
-    return ESP_OK;
+    return;
 }

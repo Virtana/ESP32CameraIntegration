@@ -1,5 +1,9 @@
 #include "iot_config.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
 /* Standard includes. */
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,6 +21,7 @@
 #include "iot_mqtt.h"
 
 #include "abr_mqtt.h"
+#include "abr_camera.h"
 
 #ifndef IOT_DEMO_MQTT_TOPIC_PREFIX
     #define IOT_DEMO_MQTT_TOPIC_PREFIX           "badgeReader"
@@ -142,16 +147,6 @@
  */
 #define ACKNOWLEDGEMENT_MESSAGE_BUFFER_LENGTH    ( sizeof( ACKNOWLEDGEMENT_MESSAGE_FORMAT ) + 2 )
 
-/*-----------------------------------------------------------*/
-
-/* Declaration of demo function. */
-int run_mqtt( bool awsIotMqttMode,
-                 const char * pIdentifier,
-                 void * pNetworkServerInfo,
-                 void * pNetworkCredentialInfo,
-                 const IotNetworkInterface_t * pNetworkInterface );
-
-/*-----------------------------------------------------------*/
 
 /**
  * @brief Called by the MQTT library when an operation completes.
@@ -189,9 +184,12 @@ static void _operationCompleteCallback( void * param1,
  * @param[in] pPublish Information about the incoming PUBLISH message passed by
  * the MQTT library.
  */
+
+
 static void _mqttSubscriptionCallback( void * param1,
                                        IotMqttCallbackParam_t * const pPublish )
 {
+    /*
     int acknowledgementLength = 0;
     size_t messageNumberIndex = 0, messageNumberLength = 1;
     IotSemaphore_t * pPublishesReceived = ( IotSemaphore_t * ) param1;
@@ -199,7 +197,6 @@ static void _mqttSubscriptionCallback( void * param1,
     char pAcknowledgementMessage[ ACKNOWLEDGEMENT_MESSAGE_BUFFER_LENGTH ] = { 0 };
     IotMqttPublishInfo_t acknowledgementInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
-    /* Print information about the incoming PUBLISH message. */
     IotLogInfo( "Incoming PUBLISH received:\r\n"
                 "Subscription topic filter: %.*s\r\n"
                 "Publish topic name: %.*s\r\n"
@@ -215,11 +212,8 @@ static void _mqttSubscriptionCallback( void * param1,
                 pPublish->u.message.info.payloadLength,
                 pPayload );
 
-    /* Find the message number inside of the PUBLISH message. */
     for( messageNumberIndex = 0; messageNumberIndex < pPublish->u.message.info.payloadLength; messageNumberIndex++ )
     {
-        /* The payload that was published contained ASCII characters, so find
-         * beginning of the message number by checking for ASCII digits. */
         if( ( pPayload[ messageNumberIndex ] >= '0' ) &&
             ( pPayload[ messageNumberIndex ] <= '9' ) )
         {
@@ -227,10 +221,8 @@ static void _mqttSubscriptionCallback( void * param1,
         }
     }
 
-    /* Check that a message number was found within the PUBLISH payload. */
     if( messageNumberIndex < pPublish->u.message.info.payloadLength )
     {
-        /* Compute the length of the message number. */
         while( ( messageNumberIndex + messageNumberLength < pPublish->u.message.info.payloadLength ) &&
                ( *( pPayload + messageNumberIndex + messageNumberLength ) >= '0' ) &&
                ( *( pPayload + messageNumberIndex + messageNumberLength ) <= '9' ) )
@@ -238,14 +230,12 @@ static void _mqttSubscriptionCallback( void * param1,
             messageNumberLength++;
         }
 
-        /* Generate an acknowledgement message. */
         acknowledgementLength = snprintf( pAcknowledgementMessage,
                                           ACKNOWLEDGEMENT_MESSAGE_BUFFER_LENGTH,
                                           ACKNOWLEDGEMENT_MESSAGE_FORMAT,
                                           ( int ) messageNumberLength,
                                           pPayload + messageNumberIndex );
 
-        /* Check for errors from snprintf. */
         if( acknowledgementLength < 0 )
         {
             IotLogWarn( "Failed to generate acknowledgement message for PUBLISH %.*s.",
@@ -254,7 +244,6 @@ static void _mqttSubscriptionCallback( void * param1,
         }
         else
         {
-            /* Set the members of the publish info for the acknowledgement message. */
             acknowledgementInfo.qos = IOT_MQTT_QOS_1;
             acknowledgementInfo.pTopicName = ACKNOWLEDGEMENT_TOPIC_NAME;
             acknowledgementInfo.topicNameLength = ACKNOWLEDGEMENT_TOPIC_NAME_LENGTH;
@@ -263,12 +252,6 @@ static void _mqttSubscriptionCallback( void * param1,
             acknowledgementInfo.retryMs = PUBLISH_RETRY_MS;
             acknowledgementInfo.retryLimit = PUBLISH_RETRY_LIMIT;
 
-            /* Send the acknowledgement for the received message. This demo program
-             * will not be notified on the status of the acknowledgement because
-             * neither a callback nor IOT_MQTT_FLAG_WAITABLE is set. However,
-             * the MQTT library will still guarantee at-least-once delivery (subject
-             * to the retransmission strategy) because the acknowledgement message is
-             * sent at QoS 1. */
             if( IotMqtt_Publish( pPublish->mqttConnection,
                                  &acknowledgementInfo,
                                  0,
@@ -288,11 +271,11 @@ static void _mqttSubscriptionCallback( void * param1,
         }
     }
 
-    /* Increment the number of PUBLISH messages received. */
     IotSemaphore_Post( pPublishesReceived );
+    */
 }
 
-/*-----------------------------------------------------------*/
+
 
 /**
  * @brief Initialize the MQTT library.
@@ -561,9 +544,11 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
  * @return `EXIT_SUCCESS` if all messages are published and received; `EXIT_FAILURE`
  * otherwise.
  */
-static int _publishAllMessages( IotMqttConnection_t mqttConnection,
-                                const char ** pTopicNames)
+int publish( IotMqttConnection_t mqttConnection,
+                                const char ** pTopicNames , QueueHandle_t* queue_handle)
 {
+    printf("QUEUE DEBUG5: %i\n", uxQueueMessagesWaiting( *queue_handle));
+
     int status = EXIT_SUCCESS;
     IotMqttError_t publishStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
@@ -589,10 +574,20 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
         /* Choose a topic name (round-robin through the array of topic names). */
         publishInfo.pTopicName = pTopicNames[0];
 
-        char format[] = {"PublishTest"};
+
+        //initialize_camera();
+
+        //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
+        //xTaskCreate(capture_image,"CaptureImageTask",750000,(void*)&queue_handle,5,NULL);
+
+    while(true)
+    {
+        configPRINTF(("PUBLISH TASK\n"));
+        char format[] = {"%i"};
 
         /* Generate the payload for the PUBLISH. */
-        status = snprintf( pPublishPayload,sizeof(format),format);
+        //status = snprintf( pPublishPayload,sizeof(format),format,apriltag_detected_id);
+        //status = snprintf( pPublishPayload,sizeof(format),format,1);
 
         /* Check for errors from snprintf. */
         if( status < 0 )
@@ -608,21 +603,34 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
             status = EXIT_SUCCESS;
         }
 
+            //configPRINTF(("QUEUE DEBUG6: %i\n", uxQueueMessagesWaiting( *queue_handle)));
+
+
         /* PUBLISH a message. This is an asynchronous function that notifies of
-         * completion through a callback. */
-        publishStatus = IotMqtt_Publish( mqttConnection,
-                                         &publishInfo,
-                                         0,
-                                         &publishComplete,
-                                         NULL );
-
-        if( publishStatus != IOT_MQTT_STATUS_PENDING )
+        * completion through a callback. */
+        while(uxQueueMessagesWaiting(*queue_handle) >0)//publish_message == true
         {
-            IotLogError("MQTT Publish not pending.");
-            status = EXIT_FAILURE;
+            //printf("Publishing ?\n");
+            uint32_t received_id = -1;
+            xQueueReceive(*queue_handle,&received_id,pdMS_TO_TICKS(500));
 
-            return status;
+            status = snprintf( pPublishPayload,18,format,received_id);
+
+
+            publishStatus = IotMqtt_Publish( mqttConnection,&publishInfo,0,&publishComplete,NULL );
+
+            if( publishStatus != IOT_MQTT_STATUS_PENDING )
+            {
+                IotLogError("MQTT Publish not pending.");
+                status = EXIT_FAILURE;
+
+                return status;
+            }
         }
+
+        vTaskDelay(pdMS_TO_TICKS(10000));
+
+    }
     return status;
 }
 
@@ -646,8 +654,10 @@ int run_mqtt( bool awsIotMqttMode,
                  const char * pIdentifier,
                  void * pNetworkServerInfo,
                  void * pNetworkCredentialInfo,
-                 const IotNetworkInterface_t * pNetworkInterface )
+                 const IotNetworkInterface_t * pNetworkInterface ,QueueHandle_t* queue_handle)
 {
+    printf("QUEUE DEBUG4: %i\n", uxQueueMessagesWaiting( *queue_handle));
+
     /* Return value of this function and the exit status of this program. */
     int status = EXIT_SUCCESS;
 
@@ -692,8 +702,7 @@ int run_mqtt( bool awsIotMqttMode,
     if( status == EXIT_SUCCESS )
     {
         /* PUBLISH (and wait) for all messages. */
-        status = _publishAllMessages( mqttConnection,pTopics);
-
+        status = publish(mqttConnection,pTopics,queue_handle);
     }
 
     if( status == EXIT_SUCCESS )

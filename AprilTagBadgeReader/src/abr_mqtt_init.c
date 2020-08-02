@@ -4,6 +4,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 /* Demo includes */
 #include "aws_demo.h"
@@ -38,7 +39,6 @@
 #include "platform/iot_threads.h"
 #include "iot_init.h"
 #include "iot_demo_logging.h"
-#include "iot_network_manager_private.h"
 
 #include "abr_mqtt_init.h"
 #include "abr_mqtt.h"
@@ -187,8 +187,12 @@ static void _cleanup( void )
 }
 
 //This function is run in a new task. It is called from Iot_CreateDetachedThread in mqtt_main().
-void mqtt_task()
+void mqtt_task(void* pvParameters)
 {
+    printf("QUEUE DEBUG3: %i\n", uxQueueMessagesWaiting( *( (QueueHandle_t*)pvParameters ) ));
+
+
+    
     void* pConnectionParams = NULL;
     void* pCredentials = NULL;
     int status;
@@ -198,14 +202,14 @@ void mqtt_task()
     pConnectionParams = AwsIotNetworkManager_GetConnectionParams( demoConnectedNetwork );
     pCredentials = AwsIotNetworkManager_GetCredentials( demoConnectedNetwork );
 
-    status = run_mqtt( true, clientcredentialIOT_THING_NAME, pConnectionParams,pCredentials,pNetworkInterface );
+    status = run_mqtt( true, clientcredentialIOT_THING_NAME, pConnectionParams,pCredentials,pNetworkInterface, (QueueHandle_t*)pvParameters);
 
     /* Log the demo status. */
     if( status == EXIT_SUCCESS )
     {
         /* DO NOT EDIT - This message is used in the test framework to
         * determine whether or not the demo was successful. */
-        IotLogInfo( "Demo completed successfully." );
+        IotLogInfo( "Demo completed successfully.");
     }
     else
     {
@@ -215,8 +219,9 @@ void mqtt_task()
         _cleanup();
 }
 
-void mqtt_main()
+void mqtt_main(QueueHandle_t* queue_handle)
 {
+    printf("QUEUE DEBUG2: %i\n", uxQueueMessagesWaiting(*queue_handle));
     vDevModeKeyProvisioning();
 
     static demoContext_t mqttDemoContext =
@@ -233,7 +238,8 @@ void mqtt_main()
 
     _initialize(&mqttDemoContext);
 
-    Iot_CreateDetachedThread(mqtt_task, &mqttDemoContext, democonfigDEMO_PRIORITY, democonfigDEMO_STACKSIZE );
+    //Iot_CreateDetachedThread(mqtt_task,(void*) queue_handle, 4, democonfigDEMO_STACKSIZE );
+    xTaskCreate(mqtt_task,"mqttTask",configMINIMAL_STACK_SIZE * 8,(void*)queue_handle,5,NULL);
 }
 
 static void _onNetworkStateChangeCallback( uint32_t network,

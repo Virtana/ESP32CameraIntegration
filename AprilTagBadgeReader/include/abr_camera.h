@@ -13,6 +13,6 @@ esp_err_t initialize_camera();
 /*
 Captures an image, creates a frame buffer and calls function "detect_apriltags".
 */
-esp_err_t capture_image();
+void capture_image(void* pvParameters);
 
 #endif
