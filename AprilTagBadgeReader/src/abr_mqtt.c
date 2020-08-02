@@ -583,39 +583,38 @@ int publish( IotMqttConnection_t mqttConnection,
     while(true)
     {
         configPRINTF(("PUBLISH TASK\n"));
-        char format[] = {"%i"};
 
         /* Generate the payload for the PUBLISH. */
         //status = snprintf( pPublishPayload,sizeof(format),format,apriltag_detected_id);
         //status = snprintf( pPublishPayload,sizeof(format),format,1);
 
-        /* Check for errors from snprintf. */
-        if( status < 0 )
-        {
-            IotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH" );
-            status = EXIT_FAILURE;
 
-            return status;
-        }
-        else
-        {
-            publishInfo.payloadLength = ( size_t ) status;
-            status = EXIT_SUCCESS;
-        }
-
-            //configPRINTF(("QUEUE DEBUG6: %i\n", uxQueueMessagesWaiting( *queue_handle)));
+        configPRINTF(("QUEUE DEBUG6: %i\n", uxQueueMessagesWaiting( *queue_handle)));
 
 
         /* PUBLISH a message. This is an asynchronous function that notifies of
         * completion through a callback. */
         while(uxQueueMessagesWaiting(*queue_handle) >0)//publish_message == true
         {
+            char format[] = {"%i"};
             //printf("Publishing ?\n");
             uint32_t received_id = -1;
             xQueueReceive(*queue_handle,&received_id,pdMS_TO_TICKS(500));
 
             status = snprintf( pPublishPayload,18,format,received_id);
 
+            if( status < 0 )
+            {
+                IotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH" );
+                status = EXIT_FAILURE;
+
+                return status;
+            }
+            else
+            {
+                publishInfo.payloadLength = ( size_t ) status;
+                status = EXIT_SUCCESS;
+            }
 
             publishStatus = IotMqtt_Publish( mqttConnection,&publishInfo,0,&publishComplete,NULL );
 
