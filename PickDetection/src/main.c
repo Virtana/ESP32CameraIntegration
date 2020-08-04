@@ -48,11 +48,14 @@
 #include "math.h"
 
 #include "aws_application_version.h"
+#include "aws_clientcredential.h"
+#include "aws_clientcredential_keys.h"
 
 #include "pickdet_camera.h"
 #include "pickdet_motion.h"
 #include "pickdet_wifi.h"
 #include "pickdet_http_display.h"
+#include "pickdet_mqtt.h"
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
@@ -126,14 +129,16 @@ int app_main( void )
 {
     prvMiscInitialization();
     if( SYSTEM_Init() == pdPASS )
-    {   
-        pickdet_cam_init();
+    {
+        // pickdet_cam_init();
         pickdet_wifi_main();
-        #ifdef HTTP_STREAM
-            Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
-        #else
-            Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
-        #endif
+        pickdet_mqtt_main();
+        //Iot_CreateDetachedThread(pickdet_mqtt_main, NULL,tskIDLE_PRIORITY+2,10*configMINIMAL_STACK_SIZE);
+        // #ifdef HTTP_STREAM
+        //     Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        // #else
+        //     Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        // #endif
     }   
     return 0;
 }
