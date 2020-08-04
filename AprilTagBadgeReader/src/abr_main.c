@@ -76,7 +76,7 @@ int app_main(void)
 {
     prvMiscInitialization();
 
-    queue_handle = xQueueCreate(5,sizeof(uint32_t)); //holds 10 detected tags.
+    queue_handle = xQueueCreate(10,sizeof(uint32_t)); //holds 10 detected tags.
 
     if(queue_handle == NULL)
     {

@@ -596,12 +596,22 @@ int publish( IotMqttConnection_t mqttConnection,
         * completion through a callback. */
         while(uxQueueMessagesWaiting(*queue_handle) >0)//publish_message == true
         {
-            char format[] = {"%i"};
+            //JSON Format
+            char format[] = {
+                "{"
+                "\"id\":\"%i\","
+                "\"dev_mac\":\"%X%X%X%X%X%X\""
+                "}"
+            };
             //printf("Publishing ?\n");
             uint32_t received_id = -1;
             xQueueReceive(*queue_handle,&received_id,pdMS_TO_TICKS(500));
 
-            status = snprintf( pPublishPayload,18,format,received_id);
+            uint8_t dev_mac[6];
+
+            esp_efuse_mac_get_default(dev_mac);
+
+            status = snprintf( pPublishPayload,50,format,received_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5]);
 
             if( status < 0 )
             {
