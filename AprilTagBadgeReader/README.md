@@ -23,8 +23,12 @@ E (383) camera: Camera init failed with error 0x101
 
 ## Displaying Camera Feed on HTTP Server
 
-- Uncomment line 25 (#define DISPLAY_IMAGES) of abr_main.c
+- Comment `#define SKIP_DISPLAY_IMAGES` in abr_config.h
 - Follow the instructions above to flash the esp-eye. Ensure that PSRAM is enabled.
 - Connect to the access point, "EESSID", (no password).
 - In a browser go to the address _192.168.4.1/stream_
+
+## Debug Statements
+
+- Debug Statements can be enabled by commenting `#define SKIP_DEBUG_PRINT` in abr_config.h
 

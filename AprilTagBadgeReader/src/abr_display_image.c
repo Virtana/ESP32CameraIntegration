@@ -83,8 +83,6 @@ esp_err_t stream_images_handler(httpd_req_t *req)
 void display_image_initialize()
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    static bool started = false;
-
 
     httpd_uri_t stream_images_uri = 
     {
@@ -96,10 +94,8 @@ void display_image_initialize()
 
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
 
-    //This will only run on first call of function.
-    if (started==false && httpd_start(&camera_httpd, &config) == ESP_OK)
+    if (httpd_start(&camera_httpd, &config) == ESP_OK)
     {
-        started = true;
         configPRINTF(("Started Server\n"));
         httpd_register_uri_handler(camera_httpd, &stream_images_uri);
     }

@@ -15,7 +15,7 @@
 #include "esp_wifi.h"
 #include "esp_interface.h"
 
-#define DISPLAY_IMAGES //comment this line to disable drawing marker on frame buffer.
+#include "abr_config.h"
 
 void detect_apriltags(camera_fb_t* fb)
 {   
@@ -44,7 +44,7 @@ void detect_apriltags(camera_fb_t* fb)
     }
     else if(fb->format == PIXFORMAT_JPEG)
     {
-        //configPRINTF(("JPEG detected\n"));
+        DEBUG_PRINTF(("JPEG detected\n"));
         
         int error = 0;
 
@@ -52,14 +52,12 @@ void detect_apriltags(camera_fb_t* fb)
 
 
         pjpeg_image = pjpeg_create_from_buffer(fb->buf,fb->len,0,&error);
-        //free(image_buffer);
 
         if(pjpeg_image == NULL)
         {
             configPRINTF(("Failed to create PJPEG image. Error:%i\n",error));
 
             pjpeg_destroy(pjpeg_image);
-            //free(image_buffer);
             image_u8_destroy(image);
 
             return;
@@ -73,14 +71,13 @@ void detect_apriltags(camera_fb_t* fb)
             configPRINTF(("Failed to create u8 from PJPEG.\n"));
 
             pjpeg_destroy(pjpeg_image);
-            //free(image_buffer);
             image_u8_destroy(image);
 
             return;
         }
     }
     
-    //configPRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
+    DEBUG_PRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
 
 
     apriltag_detector_t* detector = apriltag_detector_create();

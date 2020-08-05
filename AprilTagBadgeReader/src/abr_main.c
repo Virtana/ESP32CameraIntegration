@@ -22,9 +22,9 @@
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
 
-//#define DISPLAY_IMAGES //comment this line to skip displaying images.
+#include "abr_config.h"
 
-#ifdef DISPLAY_IMAGES
+#ifndef SKIP_DISPLAY_IMAGES
     #include "abr_camera_wifi.h"
     #include "abr_display_image.h"
 #endif
@@ -66,13 +66,13 @@ int app_main(void)
 {
     prvMiscInitialization();
 
-    #ifdef DISPLAY_IMAGES
+    #ifndef SKIP_DISPLAY_IMAGES
         initialize_camera();
         app_wifi_main();
         display_image_initialize();
     #endif
 
-    #ifndef DISPLAY_IMAGES
+    #ifdef SKIP_DISPLAY_IMAGES
 
         initialize_camera();
 

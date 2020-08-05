@@ -35,13 +35,6 @@
 
 #include "mdns.h"
 
-/* The examples use WiFi configuration that you can set via 'make menuconfig'.
-
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
-//#define EXAMPLE_ESP_WIFI_SSID      "vttltd24"
-//#define EXAMPLE_ESP_WIFI_PASS      "tacobell"
 #define EXAMPLE_ESP_WIFI_SSID      ""
 #define EXAMPLE_ESP_WIFI_PASS      ""
 #define EXAMPLE_ESP_MAXIMUM_RETRY  5
@@ -123,33 +116,10 @@ void wifi_init_softap()
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
 
-    //ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config);
 
     ESP_LOGI(TAG, "wifi_init_softap finished.SSID:%s password:%s",
              EXAMPLE_ESP_WIFI_AP_SSID, EXAMPLE_ESP_WIFI_AP_PASS);
-}
-
-/*
-void wifi_init_sta()
-{
-    configPRINTF(("Initializing as STA\n"));
-    wifi_config_t wifi_config;
-    memset(&wifi_config, 0, sizeof(wifi_config_t));
-    snprintf((char*)wifi_config.sta.ssid, 32, "%s", EXAMPLE_ESP_WIFI_SSID);
-    snprintf((char*)wifi_config.sta.password, 64, "%s", EXAMPLE_ESP_WIFI_PASS);
-
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-    ESP_LOGI(TAG, "connect to ap SSID:%s password:%s",
-             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-}
-*/
-
-void wifi_init_sta()
-{
-    configPRINTF(("Trying to initialize as STA ? .. This should never run\n"));
 }
 
 void app_wifi_main()
@@ -180,11 +150,6 @@ void app_wifi_main()
 
     if (mode & WIFI_MODE_AP) {
         wifi_init_softap();
-    }
-
-    //THIS CONDITION SHOULD NEVER BE TRUE... ESP-EYE SHOULD ONLY BE CONFIGURED AS AN AP
-    if (mode & WIFI_MODE_STA) {
-        wifi_init_sta();
     }
 
     ESP_ERROR_CHECK(esp_wifi_start());

@@ -11,6 +11,8 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+#include "abr_config.h"
+
 
 #ifdef DISPLAY_CAPTURES
     #include "abr_display_image.h"
@@ -99,12 +101,13 @@ esp_err_t capture_image()
             configPRINTF(("Failed to capture image\n"));
             return ESP_FAIL;
         }
-            //configPRINTF(("%i\n",fb->len));
-            detect_apriltags(fb);
 
-            esp_camera_fb_return(fb);
+        DEBUG_PRINTF(("BufferLength: %i\n",fb->len));
+        detect_apriltags(fb);
 
-            vTaskDelay(pdMS_TO_TICKS(500));
+        esp_camera_fb_return(fb);
+
+        vTaskDelay(pdMS_TO_TICKS(500));
 
     }
 
