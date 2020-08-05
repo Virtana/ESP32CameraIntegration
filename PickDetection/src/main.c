@@ -35,6 +35,7 @@
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
 #include "platform/iot_threads.h"
+#include "iot_network_manager_private.h"
 
 #include "nvs_flash.h"
 #if !AFR_ESP_LWIP
@@ -56,10 +57,13 @@
 #include "pickdet_wifi.h"
 #include "pickdet_http_display.h"
 #include "pickdet_mqtt.h"
+#include "pickdet_launcher.h"
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
 #define mainLOGGING_TASK_STACK_SIZE         ( configMINIMAL_STACK_SIZE * 4 )
+#define PRIORITY    ( tskIDLE_PRIORITY + 5 )
+#define STACKSIZE   ( configMINIMAL_STACK_SIZE * 8 )
 
 //uncomment for streaming with motion detection 
 //#define HTTP_STREAM
@@ -128,13 +132,21 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 int app_main( void )
 {
     prvMiscInitialization();
+
+
     if( SYSTEM_Init() == pdPASS )
     {
-        // pickdet_cam_init();
-        pickdet_wifi_main();
-        pickdet_mqtt_main();
-        //Iot_CreateDetachedThread(pickdet_mqtt_main, NULL,tskIDLE_PRIORITY+2,10*configMINIMAL_STACK_SIZE);
+        static Context_t mqttContext =
+        {
+            .networkTypes                = AWSIOT_NETWORK_TYPE_WIFI,
+            .mqttFunction                = pickdet_mqtt_main,
+            .networkConnectedCallback    = NULL,
+            .networkDisconnectedCallback = NULL
+        };
+        //pickdet_cam_init();
+        Iot_CreateDetachedThread(runMqtt_main, &mqttContext, PRIORITY, STACKSIZE);
         // #ifdef HTTP_STREAM
+        //     pickdet_wifi_main();
         //     Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
         // #else
         //     Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);

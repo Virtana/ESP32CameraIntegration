@@ -4,7 +4,7 @@ project(PickDetection)
 
 include_directories(include)
 
-add_executable(pickdetection src/main.c src/pickdet_camera.c src/pickdet_motion.c src/pickdet_wifi.c src/pickdet_http_display.c src/pickdet_mqtt.c)
+add_executable(pickdetection src/main.c src/pickdet_camera.c src/pickdet_motion.c src/pickdet_wifi.c src/pickdet_http_display.c src/pickdet_mqtt.c src/pickdet_launcher.c)
 
 # Tell IDF build to link against this target.
 set(IDF_PROJECT_EXECUTABLE pickdetection)
@@ -28,4 +28,5 @@ add_subdirectory(../amazon-freertos ./build)
 target_link_libraries(pickdetection PRIVATE AFR::mqtt 
                                     PRIVATE AFR::demo_mqtt
                                     PRIVATE AFR::demo_base
-                                    PRIVATE AFR::wifi)
+                                    PRIVATE AFR::wifi
+                                    PRIVATE AFR::demo_ble_numeric_comparison)
