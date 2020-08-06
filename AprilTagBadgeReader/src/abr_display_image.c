@@ -63,6 +63,8 @@ esp_err_t stream_images_handler(httpd_req_t *req)
             break;
         }
 
+        vTaskDelay(pdMS_TO_TICKS(30)); //Framerate limiter
+
         int64_t fr_end = esp_timer_get_time();
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
@@ -71,7 +73,6 @@ esp_err_t stream_images_handler(httpd_req_t *req)
             (uint32_t)(_jpg_buf_len/1024),
             (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
 
-        
     }
 
     last_frame = 0;
