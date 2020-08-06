@@ -1,6 +1,7 @@
 #include "abr_display_image.h"
 #include "abr_apriltags.h"
 #include "esp_log.h"
+#include "abr_camera.h"
 
 static const char* TAG = "TAG_DISP_IMG";
 
@@ -40,9 +41,6 @@ esp_err_t stream_images_handler(httpd_req_t *req)
 
         _jpg_buf_len = fb->len;
         _jpg_buf = fb->buf;
-
-        //DETECT APRILTAGS IN IMAGE
-        detect_apriltags(fb);
 
         if(res == ESP_OK){
             res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
@@ -84,6 +82,8 @@ void display_image_initialize()
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
+    config.task_priority = 4;
+
     httpd_uri_t stream_images_uri = 
     {
         .uri = "/stream",
@@ -100,4 +100,7 @@ void display_image_initialize()
         httpd_register_uri_handler(camera_httpd, &stream_images_uri);
     }
 
+    xTaskCreate(capture_image,"httpCapTsk",750000,NULL,5,NULL);
+
+    vTaskDelete(NULL);
 }

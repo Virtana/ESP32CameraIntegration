@@ -69,7 +69,7 @@ int app_main(void)
     #ifndef SKIP_DISPLAY_IMAGES
         initialize_camera();
         app_wifi_main();
-        display_image_initialize();
+        xTaskCreate(display_image_initialize,"HttpTask",750000,NULL,5,NULL);
     #endif
 
     #ifdef SKIP_DISPLAY_IMAGES

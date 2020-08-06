@@ -60,7 +60,7 @@ esp_err_t initialize_camera()
     */
 
     config.jpeg_quality = 25;
-    config.fb_count = 1;
+    config.fb_count = 2;
 
     /* ON ESP-EYE, IO13, IO14 is designed for JTAG by default,
      * to use it as generalized input,
@@ -107,7 +107,7 @@ esp_err_t capture_image()
 
         esp_camera_fb_return(fb);
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
     }
 
