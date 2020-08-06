@@ -85,6 +85,11 @@ void detect_apriltags(camera_fb_t* fb)
 
     apriltag_detector_add_family_bits(detector,family,1);
 
+
+    #ifndef SKIP_DISPLAY_IMAGES
+        vTaskDelay(pdMS_TO_TICKS(250)); //render a few frames to make transition between tasks slightly smoother
+    #endif
+
     zarray_t* detections = apriltag_detector_detect(detector,image);
 
     configPRINTF(("Detections: %i\n",zarray_size(detections)));
