@@ -43,6 +43,8 @@
 #include "abr_mqtt_init.h"
 #include "abr_mqtt.h"
 
+#include "abr_sntp.h"
+
 static uint32_t demoConnectedNetwork = AWSIOT_NETWORK_TYPE_NONE;
 static IotSemaphore_t demoNetworkSemaphore;
 static IotNetworkManagerSubscription_t subscription = IOT_NETWORK_MANAGER_SUBSCRIPTION_INITIALIZER;
@@ -140,6 +142,7 @@ static int _initialize( demoContext_t * pContext )
     /* Initialize all the  networks configured for the device. */
     if( status == EXIT_SUCCESS )
     {
+        configPRINTF(("Connecting to WiFi\n"));
         if( AwsIotNetworkManager_EnableNetwork( configENABLED_NETWORKS ) != configENABLED_NETWORKS )
         {
             IotLogError( "Failed to initialize all the networks configured for the device." );
@@ -237,6 +240,8 @@ void mqtt_main(QueueHandle_t* queue_handle)
     networkDisconnectedCallback_t networkDisconnectedCallback = NULL;
 
     _initialize(&mqttDemoContext);
+
+    sntp_main();
 
     //Iot_CreateDetachedThread(mqtt_task,(void*) queue_handle, 4, democonfigDEMO_STACKSIZE );
     xTaskCreate(mqtt_task,"mqttTask",configMINIMAL_STACK_SIZE * 8,(void*)queue_handle,5,NULL);
