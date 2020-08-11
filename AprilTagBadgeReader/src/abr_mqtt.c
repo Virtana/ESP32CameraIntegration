@@ -599,19 +599,23 @@ int publish( IotMqttConnection_t mqttConnection,
             //JSON Format
             char format[] = {
                 "{"
-                "\"id\":\"%i\","
-                "\"dev_mac\":\"%X%X%X%X%X%X\""
+                "\"id\":\"%ld\","
+                "\"mac\":\"%X%X%X%X%X%X\","
+                "\"ts\":\"%ld\""
                 "}"
             };
             //printf("Publishing ?\n");
-            uint32_t received_id = -1;
+            long int received_id = 0;
+            long int ts = 0;
+
             xQueueReceive(*queue_handle,&received_id,pdMS_TO_TICKS(500));
+            xQueueReceive(*queue_handle,&ts,pdMS_TO_TICKS(500));
 
             uint8_t dev_mac[6];
 
             esp_efuse_mac_get_default(dev_mac);
 
-            status = snprintf( pPublishPayload,50,format,received_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5]);
+            status = snprintf( pPublishPayload,100,format,received_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5],ts);
 
             if( status < 0 )
             {

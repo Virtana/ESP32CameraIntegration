@@ -3,6 +3,8 @@
 #include "task.h"
 #include "queue.h"
 
+#include <time.h>
+
 #include "abr_apriltags.h"
 
 #include "apriltag.h"
@@ -110,12 +112,20 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
 
-            uint32_t detected_id = detection->id;
+            long int detected_id = detection->id;
+
+            long int now;
+            time(&now);
+
+            //printf("DET: %s\n",ctime(&nowr));
+
+            //printf("%ld\n",nowr);
 
             if(queue_handle!=NULL)
             {
                 configPRINTF(("Sending to queue\n"));
                 xQueueSend(*queue_handle,(void*)&detected_id,pdMS_TO_TICKS(500));
+                xQueueSend(*queue_handle,(void*)&now,pdMS_TO_TICKS(500));
             }
 
             //apriltag_detected_id = detection -> id;
