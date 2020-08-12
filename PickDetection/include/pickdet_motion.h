@@ -1,4 +1,6 @@
 #include "esp_camera.h"
+#include "math.h"
+#include "pickdet_mqtt.h"
 
 //change according to resolution chosen in pickdet_camera.h
 #define WIDTH 320

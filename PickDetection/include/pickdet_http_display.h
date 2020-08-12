@@ -1,7 +1,6 @@
-#include "esp_camera.h"
 #include "esp_http_server.h"
 #include "esp_timer.h"
-#include "esp_log.h"
+#include "pickdet_motion.h"
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;

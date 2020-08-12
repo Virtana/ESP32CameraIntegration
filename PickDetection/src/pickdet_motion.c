@@ -1,8 +1,5 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "esp_log.h"
-#include "math.h"
 #include "pickdet_motion.h"
+#include "pickdet_timestamp.h"
 
 static const char *TAG = "motion_detect";
 
@@ -66,12 +63,16 @@ bool app_motion_detect() {
 
 void pickdet_motion_detect(camera_fb_t *fb){
     app_downsample(fb);
-    if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+    if(app_motion_detect()){
+        ESP_LOGE(TAG, "Motion detected!");
+    }
     app_update_frame();
     ESP_LOGI(TAG, "=============================");
 }
 
 void pickdet_motion_solo(){
+    struct mqttMessageVal sender;
+    vTaskDelay(8000/ portTICK_RATE_MS);
     while(true){
         camera_fb_t *fb = esp_camera_fb_get();
         if (!fb)
@@ -81,7 +82,12 @@ void pickdet_motion_solo(){
         }
         else{
             app_downsample(fb);
-            if(app_motion_detect())ESP_LOGE(TAG, "Motion detected!");
+            if(app_motion_detect())
+            {
+                ESP_LOGE(TAG, "Motion detected!");
+                sender.timestamp= get_time();
+                xQueueSend(xStructQueue,&sender,( TickType_t ) 0 );
+            }
             app_update_frame();
         }
     }

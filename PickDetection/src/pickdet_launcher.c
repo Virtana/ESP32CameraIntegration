@@ -1,20 +1,4 @@
-#include "iot_config.h"
-
-#include "platform/iot_threads.h"
-#include "types/iot_network_types.h"
-#include "iot_demo_logging.h"
-
-#include <string.h>
-
-#include "platform/iot_threads.h"
-#include "aws_clientcredential.h"
-#include "aws_clientcredential_keys.h"
-#include "iot_init.h"
-#include "iot_mqtt.h"
-#include "iot_wifi.h"
 #include "pickdet_launcher.h"
-
-#include "iot_network_manager_private.h"
 
 #define configENABLED_NETWORKS      ( AWSIOT_NETWORK_TYPE_WIFI )
 
@@ -191,13 +175,13 @@ static int _initialize( Context_t * pContext )
 
     if( status == EXIT_SUCCESS )
     {
-        /* Wait for network configured for the demo to be initialized. */
+        /* Wait for network configured for the function to be initialized. */
         connectedNetwork = _getConnectedNetwork( pContext );
 
         if( connectedNetwork == AWSIOT_NETWORK_TYPE_NONE )
         {
             /* Network not yet initialized. Block for a network to be initialized. */
-            IotLogInfo( "No networks connected for the demo. Waiting for a network connection. " );
+            IotLogInfo( "No networks connected for the function. Waiting for a network connection. " );
             connectedNetwork = _waitForNetworkConnection( pContext );
         }
     }
@@ -222,7 +206,7 @@ static void _cleanup( void )
 {
     /* Remove network manager subscription */
     AwsIotNetworkManager_RemoveSubscription( subscription );
-    /* Disable all the networks used by the demo.*/
+    /* Disable all the networks used by the function.*/
     AwsIotNetworkManager_DisableNetwork( configENABLED_NETWORKS );
     IotSemaphore_Destroy( &networkSemaphore );
     IotSdk_Cleanup();
@@ -241,7 +225,7 @@ void runMqtt_main( void * pArgument )
 
     if( status == EXIT_SUCCESS )
     {
-        IotLogInfo( "Successfully initialized the demo. Network type for the demo: %d", connectedNetwork );
+        IotLogInfo( "Successfully initialized the function. Network type for the function: %d", connectedNetwork );
 
         pNetworkInterface = AwsIotNetworkManager_GetNetworkInterface( connectedNetwork );
         pConnectionParams = AwsIotNetworkManager_GetConnectionParams( connectedNetwork );
