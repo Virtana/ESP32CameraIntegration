@@ -2,7 +2,7 @@
 
 To flash ESP-EYE:
 
-run "run_cmake.sh"
+run "run_cmake.sh"\
 `cd ./build`\
 `make flash monitor`
 
