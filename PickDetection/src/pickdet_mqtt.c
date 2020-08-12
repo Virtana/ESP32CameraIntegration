@@ -23,29 +23,15 @@
  * http://www.FreeRTOS.org
  */
 
-/**
- * @file iot_demo_mqtt.c
- * @brief Demonstrates usage of the MQTT library.
- */
 
-/* The config header is always included first. */
 #include "iot_config.h"
-
-/* Standard includes. */
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
-/* Set up logging for this demo. */
 #include "iot_demo_logging.h"
 
-/* Platform layer includes. */
-#include "platform/iot_clock.h"
-#include "platform/iot_threads.h"
-
-/* MQTT include. */
-#include "iot_mqtt.h"
+#include "pickdet_mqtt.h"
+#include "pickdet_timestamp.h"
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -54,14 +40,14 @@
  * Provide default values for undefined configuration settings.
  */
 #ifndef IOT_DEMO_MQTT_TOPIC_PREFIX
-#define IOT_DEMO_MQTT_TOPIC_PREFIX "iotdemo"
+#define IOT_DEMO_MQTT_TOPIC_PREFIX "pickdetection"
 #endif
-#ifndef IOT_DEMO_MQTT_PUBLISH_BURST_SIZE
-#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE (10)
-#endif
-#ifndef IOT_DEMO_MQTT_PUBLISH_BURST_COUNT
-#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT (10)
-#endif
+//#ifndef IOT_DEMO_MQTT_PUBLISH_BURST_SIZE
+#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE (1)
+//#endif
+//#ifndef IOT_DEMO_MQTT_PUBLISH_BURST_COUNT
+#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT (1)
+//#endif
 /** @endcond */
 
 /* Validate MQTT demo configuration settings. */
@@ -79,7 +65,7 @@
  * This prefix is also used to generate topic names and topic filters used in this
  * demo.
  */
-#define CLIENT_IDENTIFIER_PREFIX "iotdemo"
+#define CLIENT_IDENTIFIER_PREFIX "pickdetection"
 
 /**
  * @brief The longest client identifier that an MQTT server must accept (as defined
@@ -126,7 +112,7 @@
 /**
  * @brief How many topic filters will be used in this demo.
  */
-#define TOPIC_FILTER_COUNT (4)
+#define TOPIC_FILTER_COUNT (1)
 
 /**
  * @brief The length of each topic filter.
@@ -138,12 +124,12 @@
 /**
  * @brief Format string of the PUBLISH messages in this demo.
  */
-#define PUBLISH_PAYLOAD_FORMAT "Hello world %d!"
+#define PUBLISH_PAYLOAD_FORMAT FORMAT_JSON /////
 
 /**
  * @brief Size of the buffer that holds the PUBLISH messages in this demo.
  */
-#define PUBLISH_PAYLOAD_BUFFER_LENGTH (sizeof(PUBLISH_PAYLOAD_FORMAT) + 2)
+#define PUBLISH_PAYLOAD_BUFFER_LENGTH (sizeof(PUBLISH_PAYLOAD_FORMAT) + 10)
 
 /**
  * @brief The maximum number of times each PUBLISH in this demo will be retried.
@@ -601,7 +587,7 @@ static int _modifySubscriptions(IotMqttConnection_t mqttConnection,
  */
 static int _publishAllMessages(IotMqttConnection_t mqttConnection,
                                const char **pTopicNames,
-                               IotSemaphore_t *pPublishReceivedCounter)
+                               IotSemaphore_t *pPublishReceivedCounter,struct mqttMessageVal message)
 {
     int status = EXIT_SUCCESS;
     intptr_t publishCount = 0, i = 0;
@@ -643,8 +629,7 @@ static int _publishAllMessages(IotMqttConnection_t mqttConnection,
         /* Generate the payload for the PUBLISH. */
         status = snprintf(pPublishPayload,
                           PUBLISH_PAYLOAD_BUFFER_LENGTH,
-                          PUBLISH_PAYLOAD_FORMAT,
-                          (int)publishCount);
+                          PUBLISH_PAYLOAD_FORMAT,(long int)message.timestamp);
 
         /* Check for errors from snprintf. */
         if (status < 0)
@@ -749,9 +734,6 @@ int pickdet_mqtt_main(bool awsIotMqttMode,
     const char *pTopics[TOPIC_FILTER_COUNT] =
         {
             IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/1",
-            IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/2",
-            IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/3",
-            IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/4",
         };
 
     /* Flags for tracking which cleanup functions must be called. */
@@ -790,29 +772,38 @@ int pickdet_mqtt_main(bool awsIotMqttMode,
 
     if (status == EXIT_SUCCESS)
     {
-        configPRINTF(("-------Attempting to publish messages...\n"));
-        /* Create the semaphore to count incoming PUBLISH messages. */
-        if (IotSemaphore_Create(&publishesReceived,
-                                0,
-                                IOT_DEMO_MQTT_PUBLISH_BURST_SIZE) == true)
+        initialize_sntp();
+        struct mqttMessageVal receiver;
+        while(true)
         {
-            /* PUBLISH (and wait) for all messages. */
-            status = _publishAllMessages(mqttConnection,
-                                         pTopics,
-                                         &publishesReceived);
+            if(uxQueueSpacesAvailable(xStructQueue)!=10)
+            {
+                xQueueReceive(xStructQueue, &(receiver),( TickType_t ) 10 );
+                /* Create the semaphore to count incoming PUBLISH messages. */
+                if (IotSemaphore_Create(&publishesReceived,
+                                        0,
+                                        IOT_DEMO_MQTT_PUBLISH_BURST_SIZE) == true)
+                {
+                    /* PUBLISH (and wait) for all messages. */
+                    status = _publishAllMessages(mqttConnection,
+                                                pTopics,
+                                                &publishesReceived,receiver);
 
-            /* Destroy the incoming PUBLISH counter. */
-            IotSemaphore_Destroy(&publishesReceived);
-        }
-        else
-        {
-            /* Failed to create incoming PUBLISH counter. */
-            status = EXIT_FAILURE;
+                    /* Destroy the incoming PUBLISH counter. */
+                    IotSemaphore_Destroy(&publishesReceived);
+                }
+                else
+                {
+                    /* Failed to create incoming PUBLISH counter. */
+                    status = EXIT_FAILURE;
+                }
+            }
         }
     }
 
     if (status == EXIT_SUCCESS)
     {
+        configPRINTF(("-------Attempting to modify subscriptions...\n"));
         /* Remove the topic subscription filters used in this demo. */
         status = _modifySubscriptions(mqttConnection,
                                       IOT_MQTT_UNSUBSCRIBE,
@@ -823,16 +814,17 @@ int pickdet_mqtt_main(bool awsIotMqttMode,
     /* Disconnect the MQTT connection if it was established. */
     if (connectionEstablished == true)
     {
+        configPRINTF(("-------Attempting to disconnect...\n"));
         IotMqtt_Disconnect(mqttConnection, 0);
     }
 
     /* Clean up libraries if they were initialized. */
     if (librariesInitialized == true)
     {
+        configPRINTF(("-------Attempting to cleanup...\n"));
         _cleanupDemo();
     }
 
     return status;
 }
-
 /*-----------------------------------------------------------*/

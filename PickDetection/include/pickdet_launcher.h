@@ -1,5 +1,14 @@
+#include "iot_config.h"
+#include "iot_demo_logging.h"
+#include "iot_init.h"
+#include "iot_mqtt.h"
+#include "iot_wifi.h"
 #include "platform/iot_network.h"
 #include "platform/iot_threads.h"
+#include "types/iot_network_types.h"
+#include "iot_network_manager_private.h"
+#include "aws_clientcredential.h"
+#include "aws_clientcredential_keys.h"
 
 typedef int (* mqttFunctionPtr_t)( bool awsIotMqttMode,
                                 const char * pIdentifier,

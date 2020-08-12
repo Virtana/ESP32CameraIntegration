@@ -26,16 +26,8 @@
 
 #include "iot_config.h"
 
-/* FreeRTOS includes. */
-
-#include "FreeRTOS.h"
-#include "task.h"
-
-/* AWS System includes. */
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
-#include "platform/iot_threads.h"
-#include "iot_network_manager_private.h"
 
 #include "nvs_flash.h"
 #if !AFR_ESP_LWIP
@@ -43,27 +35,19 @@
 #include "FreeRTOS_Sockets.h"
 #endif
 
-#include "esp_system.h"
 #include "esp_interface.h"
 
-#include "math.h"
-
 #include "aws_application_version.h"
-#include "aws_clientcredential.h"
-#include "aws_clientcredential_keys.h"
 
 #include "pickdet_camera.h"
-#include "pickdet_motion.h"
 #include "pickdet_wifi.h"
 #include "pickdet_http_display.h"
-#include "pickdet_mqtt.h"
 #include "pickdet_launcher.h"
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
-#define mainLOGGING_TASK_STACK_SIZE         ( configMINIMAL_STACK_SIZE * 4 )
-#define PRIORITY    ( tskIDLE_PRIORITY + 5 )
-#define STACKSIZE   ( configMINIMAL_STACK_SIZE * 8 )
+#define mainLOGGING_TASK_STACK_SIZE         ( configMINIMAL_STACK_SIZE * 8 )
+#define STACKSIZE   ( configMINIMAL_STACK_SIZE * 7 )
 
 //uncomment for streaming with motion detection 
 //#define HTTP_STREAM
@@ -132,10 +116,17 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 int app_main( void )
 {
     prvMiscInitialization();
-
+    pickdet_cam_init();
+    xStructQueue = xQueueCreate(10,sizeof(message));
 
     if( SYSTEM_Init() == pdPASS )
     {
+        #ifdef HTTP_STREAM
+            //STREAMING AND MOTION DETECTION
+             pickdet_wifi_main();
+             Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+6,3*configMINIMAL_STACK_SIZE);
+        #else
+            //MQTT PUBLISHING AND MOTION DETECTION - NO HTTP STREAMING
         static Context_t mqttContext =
         {
             .networkTypes                = AWSIOT_NETWORK_TYPE_WIFI,
@@ -143,14 +134,9 @@ int app_main( void )
             .networkConnectedCallback    = NULL,
             .networkDisconnectedCallback = NULL
         };
-        //pickdet_cam_init();
-        Iot_CreateDetachedThread(runMqtt_main, &mqttContext, PRIORITY, STACKSIZE);
-        // #ifdef HTTP_STREAM
-        //     pickdet_wifi_main();
-        //     Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
-        // #else
-        //     Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
-        // #endif
+        Iot_CreateDetachedThread(runMqtt_main, &mqttContext, tskIDLE_PRIORITY + 2, STACKSIZE);
+        Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY + 3,STACKSIZE);
+        #endif
     }   
     return 0;
 }

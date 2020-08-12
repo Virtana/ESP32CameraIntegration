@@ -35,8 +35,8 @@
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define EXAMPLE_ESP_WIFI_SSID      "@BR@H@M"
-#define EXAMPLE_ESP_WIFI_PASS      "family4GOD"
+#define EXAMPLE_ESP_WIFI_SSID      ""
+#define EXAMPLE_ESP_WIFI_PASS      ""
 #define EXAMPLE_ESP_MAXIMUM_RETRY  5
 #define EXAMPLE_ESP_WIFI_AP_SSID   "ESP_EYE_AP"
 #define EXAMPLE_ESP_WIFI_AP_PASS   ""
