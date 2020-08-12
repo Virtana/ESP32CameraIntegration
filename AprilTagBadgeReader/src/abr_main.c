@@ -19,8 +19,6 @@
 #include "aws_application_version.h"
 
 #include "abr_camera.h"
-#include "abr_apriltags.h"
-#include "abr_pin_map.h"
 
 
 /* Logging Task Defines. */
@@ -60,10 +58,8 @@ int app_main(void)
     prvMiscInitialization();
     initialize_camera();
 
-    while(true)
-    {
-        capture_image();
-    }
+    //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
+    xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
 
     return 0;
 }
