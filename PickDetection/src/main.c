@@ -34,6 +34,7 @@
 /* AWS System includes. */
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
+#include "platform/iot_threads.h"
 
 #include "nvs_flash.h"
 #if !AFR_ESP_LWIP
@@ -42,21 +43,23 @@
 #endif
 
 #include "esp_system.h"
-#include "esp_wifi.h"
 #include "esp_interface.h"
-#include "esp_log.h" 
 
-#include "esp_camera.h" 
 #include "math.h"
 
 #include "aws_application_version.h"
 
 #include "pickdet_camera.h"
 #include "pickdet_motion.h"
+#include "pickdet_wifi.h"
+#include "pickdet_http_display.h"
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
 #define mainLOGGING_TASK_STACK_SIZE         ( configMINIMAL_STACK_SIZE * 4 )
+
+//uncomment for streaming with motion detection 
+//#define HTTP_STREAM
 
 static const char *TAG = "STATUS";
 
@@ -122,11 +125,15 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 int app_main( void )
 {
     prvMiscInitialization();
-
     if( SYSTEM_Init() == pdPASS )
-    {
+    {   
         pickdet_cam_init();
-        xTaskCreate(pickdet_motion_detect, "Motion Detection",10000,NULL,1,NULL);
+        pickdet_wifi_main();
+        #ifdef HTTP_STREAM
+            Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        #else
+            Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY+1,3*configMINIMAL_STACK_SIZE);
+        #endif
     }   
     return 0;
 }
