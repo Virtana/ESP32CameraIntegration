@@ -1,8 +1,11 @@
 
 #include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
+#include <time.h>
 
 #include "abr_apriltags.h"
-#include "abr_config.h"
 
 #include "apriltag.h"
 #include "tag36h11.h"
@@ -10,13 +13,18 @@
 #include "pjpeg.h"
 #include "image_u8.h"
 
+#include "esp_camera.h"
+#include "img_converters.h"
+
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_interface.h"
 
-void detect_apriltags(camera_fb_t* fb)
+#include "abr_mqtt.h"
+
+void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 {   
     image_u8_t* image = NULL;
 
@@ -43,11 +51,12 @@ void detect_apriltags(camera_fb_t* fb)
     }
     else if(fb->format == PIXFORMAT_JPEG)
     {
-        DEBUG_PRINTF(("JPEG detected\n"));
+        //configPRINTF(("JPEG detected\n"));
         
         int error = 0;
 
         pjpeg_t* pjpeg_image = NULL;
+
 
         pjpeg_image = pjpeg_create_from_buffer(fb->buf,fb->len,0,&error);
 
@@ -75,11 +84,11 @@ void detect_apriltags(camera_fb_t* fb)
         }
     }
     
-    DEBUG_PRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
+    //configPRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
 
 
     apriltag_detector_t* detector = apriltag_detector_create();
-	apriltag_family_t* family = tag36h11_create();
+    apriltag_family_t* family = tag36h11_create();
 
     apriltag_detector_add_family_bits(detector,family,1);
 
@@ -99,6 +108,19 @@ void detect_apriltags(camera_fb_t* fb)
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
 
+            long int detected_id = detection->id;
+
+            long int now;
+            time(&now);
+
+
+            if(queue_handle!=NULL)
+            {
+                configPRINTF(("Sending to queue\n"));
+                xQueueSend(*queue_handle,(void*)&detected_id,pdMS_TO_TICKS(500));
+                xQueueSend(*queue_handle,(void*)&now,pdMS_TO_TICKS(500));
+            }
+        
             apriltag_detection_destroy(detection);
         }
     }
@@ -106,9 +128,9 @@ void detect_apriltags(camera_fb_t* fb)
     configPRINTF(("\n"));
 
     //Free resources
-    zarray_destroy(detections);
     image_u8_destroy(image);
     tag36h11_destroy(family);
     apriltag_detector_destroy(detector);
+    zarray_destroy(detections);
 
 }

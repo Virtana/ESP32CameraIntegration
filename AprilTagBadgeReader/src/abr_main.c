@@ -1,14 +1,15 @@
-//#include "iot_config.h"
-
 /* FreeRTOS includes. */
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 
 /* AWS System includes. */
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
+#include "iot_mqtt.h"
+#include "iot_config.h"
 
 #include "nvs_flash.h"
 
@@ -17,9 +18,18 @@
 #include "esp_interface.h"
 
 #include "aws_application_version.h"
+#include "aws_clientcredential.h"
+#include "aws_clientcredential_keys.h"
 
 #include "abr_camera.h"
+#include "abr_apriltags.h"
+#include "abr_pin_map.h"
+#include "abr_mqtt_init.h"
+#include "abr_mqtt.h"
 
+#include "stdio.h"
+
+QueueHandle_t queue_handle;
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
@@ -50,16 +60,33 @@ static void prvMiscInitialization( void )
     configPRINTF( ("Initializing FreeRTOS TCP stack\r\n") );
     vApplicationIPInit();
 #endif
+
 }
 
 
 int app_main(void)
 {
     prvMiscInitialization();
+
+    queue_handle = xQueueCreate(20,sizeof(long int)); //holds 10 detected tags (and timestamp for each)
+
+    if(queue_handle == NULL)
+    {
+        configPRINTF(("Failed to create queue\n"));
+        return -1;
+    }
+
+    printf("QUEUE DEBUG: %i\n", uxQueueMessagesWaiting(queue_handle));
+
+    if(SYSTEM_Init() == pdPASS)
+    {
+        mqtt_main(&queue_handle);
+    }
+
     initialize_camera();
 
     //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-    xTaskCreate(capture_image,"CaptureImageTask",750000,NULL,5,NULL);
+    xTaskCreate(capture_image,"CaptureImageTask",750000,(void*)&queue_handle,4,NULL);
 
     return 0;
 }
