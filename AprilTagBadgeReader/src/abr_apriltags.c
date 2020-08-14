@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "abr_apriltags.h"
+#include "abr_config.h"
 
 #include "apriltag.h"
 #include "tag36h11.h"
@@ -51,7 +52,7 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
     }
     else if(fb->format == PIXFORMAT_JPEG)
     {
-        //configPRINTF(("JPEG detected\n"));
+        DEBUG_PRINTF(("JPEG detected\n"));
         
         int error = 0;
 
@@ -84,7 +85,7 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
         }
     }
     
-    //configPRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
+    DEBUG_PRINTF(("WIDTH,HEIGHT,STRIDE = %i,%i,%i\n",image->width,image->height,image->stride));
 
 
     apriltag_detector_t* detector = apriltag_detector_create();
