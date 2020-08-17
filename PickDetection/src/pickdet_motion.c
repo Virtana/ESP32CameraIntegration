@@ -66,7 +66,7 @@ void app_update_frame() {
     }
 }
 
-void pickdet_motion_detect(camera_fb_t *fb){
+void pickdet_http_motion_detect(camera_fb_t *fb){
     app_downsample(fb);
     if(app_motion_detect()){
         ESP_LOGE(TAG, "Motion detected!");
@@ -75,7 +75,7 @@ void pickdet_motion_detect(camera_fb_t *fb){
     ESP_LOGI(TAG, "=============================");
 }
 
-void pickdet_motion_solo(){
+void pickdet_independent_motion_detect(){
     struct mqttMessageVal sender;
     vTaskDelay(8000/ portTICK_RATE_MS);
     while(true){

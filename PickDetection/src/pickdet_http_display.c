@@ -36,7 +36,7 @@ esp_err_t stream_handler(httpd_req_t *req)
         else
         {
             //motion detection
-            pickdet_motion_detect(fb);
+            pickdet_http_motion_detect(fb);
             
             if (fb->format != PIXFORMAT_JPEG)
             {

@@ -135,7 +135,7 @@ int app_main( void )
             .networkDisconnectedCallback = NULL
         };
         Iot_CreateDetachedThread(runMqtt_main, &mqttContext, tskIDLE_PRIORITY + 2, STACKSIZE);
-        Iot_CreateDetachedThread(pickdet_motion_solo, NULL,tskIDLE_PRIORITY + 3,STACKSIZE);
+        Iot_CreateDetachedThread(pickdet_independent_motion_detect, NULL,tskIDLE_PRIORITY + 3,STACKSIZE);
         #endif
     }   
     return 0;

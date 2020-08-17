@@ -4,7 +4,14 @@ project(PickDetection)
 
 include_directories(include)
 
-add_executable(pickdetection src/main.c src/pickdet_camera.c src/pickdet_motion.c src/pickdet_wifi.c src/pickdet_http_display.c src/pickdet_mqtt.c src/pickdet_launcher.c src/pickdet_timestamp.c)
+add_executable(pickdetection src/main.c 
+                src/pickdet_camera.c 
+                src/pickdet_motion.c 
+                src/pickdet_wifi.c 
+                src/pickdet_http_display.c 
+                src/pickdet_mqtt.c 
+                src/pickdet_launcher.c 
+                src/pickdet_timestamp.c)
 
 # Tell IDF build to link against this target.
 set(IDF_PROJECT_EXECUTABLE pickdetection)
@@ -17,7 +24,7 @@ get_filename_component(
 )
 list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
-include_directories(BEFORE freertos-configs)
+##include_directories(BEFORE freertos-configs)
 
 # Add FreeRTOS as a subdirectory. AFR_BOARD tells which board to target.
 set(AFR_BOARD espressif.esp32_devkitc CACHE INTERNAL "")

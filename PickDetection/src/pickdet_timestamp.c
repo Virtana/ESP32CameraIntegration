@@ -16,12 +16,6 @@ long int get_time()
     
     }    
     return now;
-    // char strftime_buf[64];
-    // setenv("TZ", "<-04>4", 1);
-    // tzset();
-    // localtime_r(&now, &timeinfo);
-    // strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    // ESP_LOGI(TAG, "The current date/time in New York is: %s", strftime_buf); 
 }
 
 void obtain_time(void)
