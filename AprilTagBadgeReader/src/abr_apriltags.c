@@ -10,11 +10,7 @@
 #include "pjpeg.h"
 #include "image_u8.h"
 
-#include "iot_system_init.h"
-#include "iot_logging_task.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_interface.h"
+#include "sensor.h"
 
 void detect_apriltags(camera_fb_t* fb)
 {   
