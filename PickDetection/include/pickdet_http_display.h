@@ -1,9 +1,8 @@
-#include "esp_camera.h"
 #include "esp_http_server.h"
 #include "esp_timer.h"
-#include "esp_log.h"
+#include "pickdet_motion.h"
 
-#define PART_BOUNDARY "123456789000000000000987654321"
+#define PART_BOUNDARY "123456789000000000000987654321" //user-defined boundary used by server to distinguish payload it receives
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
