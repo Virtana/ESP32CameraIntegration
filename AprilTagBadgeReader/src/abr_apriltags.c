@@ -111,7 +111,7 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 
             long int detected_id = detection->id;
 
-            long int now;
+            long int now; //current time (seconds since epoch)
             time(&now);
 
 
