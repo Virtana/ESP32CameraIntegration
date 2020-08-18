@@ -8,7 +8,10 @@ To flash ESP-EYE:
 - `cd build`
 - Ensure PSRAM is enabled for image capturing and apriltag detection, because not enough memory is available.
     - `make menuconfig`
-    - Component config > ESP32-specific > enable Support for external, SPI-connected RAM
+    - Component config > ESP32-specific > enable 'Support for external, SPI-connected RAM'
+- Disable 'WiFi IRAM Speed Optimization'. If this is not disabled, the linker reports that the program will not fit.
+    - `make menuconfig`
+    - Component config > Wi-Fi > disable 'WiFi IRAM Speed Optimization'
 - `make flash monitor`
 
 If PSRAM is not enabled, the following error occurs:
