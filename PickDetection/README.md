@@ -10,7 +10,7 @@ The operating principle is the comparison of consecutive camera frames. The fram
 
 ### Workspace Setup
 ##### 1. Clone Repository
-* Choose your directory for cloning this repository and run `$ git clone {HTTPS/SSH_LINK}`
+* Choose your directory for cloning this repository and run `$ git clone --recursive {HTTPS/SSH_LINK}`
 ##### 2. Prerequisite Installation
 Run these terminal commands:
 
@@ -36,7 +36,7 @@ Before using the code base, please follow [Getting Started with FreeRTOS]([https
 *  ` $ pip install boto3`
 
 ##### 3. Building and Flashing
-The code base includes a build executable specific to the ESP-EYE. Within `../ESP32CameraIntegration/PickDetection/`,  build the package using `$./build.sh`  and the package can be made and flashed using `make flash` or `make flash monitor`.
+The code base includes a build executable specific to the ESP-EYE. Within `../ESP32CameraIntegration/PickDetection/`,  build the package using `$./build.sh`  and the package can be made and flashed using `make flash` or `make flash monitor`. The latter includes a serial monitor in the terminal to view the output from the board at runtime. Run `make monitor` to view the output of runtime for an already flashed board. 
 
 ##### *NOTE:*
 Unless integration is done with this code base to include additional threads and idle tasks, building the package as is should throw errors pertaining to *vApplicationTickHook* and *vApplicationIdleHook*. This is corrected by altering the **FreeRTOSConfig.h** file located in the *amazon-freetos* submodule present at `~../ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files`.
@@ -75,8 +75,8 @@ Replace the macro argument in the files to change the following:
 - Block difference threshold `#define BLOCK_DIFF_THRESHOLD {BLOCK_DIFF_VALUE}`
 - Image difference threshold `#define IMAGE_DIFF_THRESHOLD {IMAGE_DIFF_VALUE}`
 
-**NOTE:** The difference thresholds are only valid for 0 < `BLOCK_DIFF_THRESHOLD` < 1 and 0 < `IMAGE_DIFF_THRESHOLD` < 1. The width and height MUST reflect the resolution selected in **pickdet_camera.h**. An automated definition of `WIDTH` and `HEIGHT` depedent upon `CAMERA_FRAME_SIZE` is to be done.
+**NOTE:** The difference thresholds are only valid for 0 < `BLOCK_DIFF_THRESHOLD` < 1 and 0 < `IMAGE_DIFF_THRESHOLD` < 1. The width and height MUST reflect the resolution selected in **pickdet_camera.h**. An automated definition of `WIDTH` and `HEIGHT` dependent upon `CAMERA_FRAME_SIZE` is to be done.
 
 ##### *main.c*
 
-Select between code operation by commenting/uncommenting `#define HTTP_STREAM`.When defined, motion detection is coupled task with HTTP streaming to a web server, accessible via your browser with default IP `192.168.4.1/`. When undefined, motion detection is run in tandem with a task which publishes MQTT messages to IOT Core each time motion is detected. 
+Select between code operation by commenting/uncommenting `#define HTTP_STREAM`.When defined, motion detection is a coupled task with HTTP streaming to a web server, accessible via your browser with default IP `192.168.4.1/`. When undefined, motion detection is run in tandem with a task which publishes MQTT messages to IOT Core each time motion is detected. 
