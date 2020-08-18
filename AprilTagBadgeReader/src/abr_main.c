@@ -19,8 +19,6 @@
 #include "aws_application_version.h"
 
 #include "abr_camera.h"
-#include "abr_apriltags.h"
-#include "abr_pin_map.h"
 
 
 /* Logging Task Defines. */
@@ -60,10 +58,9 @@ int app_main(void)
     prvMiscInitialization();
     initialize_camera();
 
-    while(true)
-    {
-        capture_image();
-    }
+    //Stack width defined by macro portSTACK_TYPE = uint8_t. Stack size = StackDepth x sizeof(portSTACK_TYPE) = StackDepth
+    //StackDepth of type uint16_t so max stack size is 0xFFFF = 65535
+    xTaskCreate(capture_image,"CaptureImageTask",65535,NULL,5,NULL);
 
     return 0;
 }

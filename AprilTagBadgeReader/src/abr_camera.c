@@ -1,13 +1,16 @@
 
 #include "FreeRTOS.h"
+#include "task.h"
 
 #include "abr_camera.h"
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
+#include "abr_config.h"
 
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
 #include "esp_system.h"
+#include "sensor.h"
 
 
 esp_err_t initialize_camera()
@@ -37,20 +40,22 @@ esp_err_t initialize_camera()
 
     config.xclk_freq_hz = 20000000; //20MHz
 
-    config.pixel_format = PIXFORMAT_GRAYSCALE;
+    config.pixel_format = PIXFORMAT_JPEG;
     config.frame_size = FRAMESIZE_VGA; // VGA = 640x480  (see sensors.h)
 
     /*
-        FRAMESIZE_QVGA (320X240px) - stable| inconsistent detection when image is taken at an angle. Takes ~1 second per detection
+        FOR GRAYSCALE CAPTURE:
 
-        FRAMESIZE_VGA (640x480px) - seems to be stable..............| , detection is significantly more consistent than QVGA. Takes ~4 seconds per detection.
+        FRAMESIZE_QVGA (320X240px) -inconsistent detection when image is taken at an angle. Takes ~1 second per detection
+
+        FRAMESIZE_VGA (640x480px) - detection is significantly more consistent than QVGA. Takes ~4 seconds per detection.
             FRAMESIZE_VGA is only stable if alignment is set such that no line padding is added to image_u8 created (i.e. stride = width) (see abr_apriltags.c).
-            For default alignment (line padding added), program crashes (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
-
-        FRAMESIZE > VGA - Instant crash! (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
+            For default alignment (line padding added), program crashes (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.
     */
 
-    config.jpeg_quality = 63;
+    //jpeg_quality determines the amount of loss during jpeg compression. This value ranges from 0-63, where 0 is almost lossless (highest quality, highest image size)
+    //63 gives the lowest quality and lowest image size
+    config.jpeg_quality = 25;
     config.fb_count = 1;
 
     /* ON ESP-EYE, IO13, IO14 is designed for JTAG by default,
@@ -80,19 +85,24 @@ esp_err_t initialize_camera()
     return error;
 }
 
-esp_err_t capture_image()
+void capture_image()
 {
-    camera_fb_t* fb = esp_camera_fb_get();
-
-    if(fb == NULL)
+    while(true)
     {
-        configPRINTF(("Failed to capture image\n"));
-        return ESP_FAIL;
+        camera_fb_t* fb = esp_camera_fb_get();
+
+        if(fb == NULL)
+        {
+            configPRINTF(("Failed to capture image"));
+            break;
+        }
+
+        DEBUG_PRINTF(("BufferLength:%i\n",fb->len));
+        detect_apriltags(fb);
+
+        esp_camera_fb_return(fb);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    detect_apriltags(fb);
-
-    esp_camera_fb_return(fb);
-
-    return ESP_OK;
+    vTaskDelete(NULL);
 }

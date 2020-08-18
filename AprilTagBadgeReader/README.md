@@ -11,7 +11,6 @@ To flash ESP-EYE:
     - Component config > ESP32-specific > enable Support for external, SPI-connected RAM
 - `make flash monitor`
 
-
 If PSRAM is not enabled, the following error occurs:
 
 I (353) camera: Allocating 300 KB frame buffer in PSRAM\
