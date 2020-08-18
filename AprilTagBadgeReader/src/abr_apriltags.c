@@ -7,6 +7,7 @@
 
 #include "abr_apriltags.h"
 #include "abr_config.h"
+#include "abr_mqtt.h"
 
 #include "apriltag.h"
 #include "tag36h11.h"
@@ -17,14 +18,8 @@
 #include "esp_camera.h"
 #include "img_converters.h"
 
-#include "iot_system_init.h"
-#include "iot_logging_task.h"
 #include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_interface.h"
 #include "sensor.h"
-
-#include "abr_mqtt.h"
 
 void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 {   

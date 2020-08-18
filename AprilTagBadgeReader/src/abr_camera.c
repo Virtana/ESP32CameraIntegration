@@ -7,10 +7,7 @@
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
 
-#include "iot_system_init.h"
-#include "iot_logging_task.h"
 #include "esp_system.h"
-#include "esp_log.h"
 #include "sensor.h"
 
 
@@ -98,12 +95,12 @@ void capture_image(void* pvParameters)
             configPRINTF(("Failed to capture image\n"));
             return;
         }
-            //configPRINTF(("%i\n",fb->len));
-            detect_apriltags(fb,(QueueHandle_t*)pvParameters);
+        
+        detect_apriltags(fb,(QueueHandle_t*)pvParameters);
 
-            esp_camera_fb_return(fb);
+        esp_camera_fb_return(fb);
 
-            vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
     }
 
