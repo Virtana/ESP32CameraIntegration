@@ -11,6 +11,8 @@
 #include "iot_logging_task.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "sensor.h"
+
 
 esp_err_t initialize_camera()
 {
@@ -52,6 +54,8 @@ esp_err_t initialize_camera()
         FRAMESIZE > VGA - Instant crash! (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
     */
 
+    //jpeg_quality determines the amount of loss during jpeg compression. This value ranges from 0-63, where 0 is almost lossless (highest quality, highest image size)
+    //63 gives the lowest quality and lowest image size
     config.jpeg_quality = 25;
     config.fb_count = 1;
 

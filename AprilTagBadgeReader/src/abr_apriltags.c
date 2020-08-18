@@ -22,6 +22,7 @@
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_interface.h"
+#include "sensor.h"
 
 #include "abr_mqtt.h"
 

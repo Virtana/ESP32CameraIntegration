@@ -85,8 +85,9 @@ int app_main(void)
 
     initialize_camera();
 
-    //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-    xTaskCreate(capture_image,"CaptureImageTask",750000,(void*)&queue_handle,4,NULL);
+    //Stack width defined by macro portSTACK_TYPE = uint8_t. Stack size = StackDepth x sizeof(portSTACK_TYPE) = StackDepth
+    //StackDepth of type uint16_t so max stack size is 0xFFFF = 65535
+    xTaskCreate(capture_image,"CaptureImageTask",65535,NULL,5,NULL);
 
     return 0;
 }
