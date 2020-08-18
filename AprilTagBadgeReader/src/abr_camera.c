@@ -93,7 +93,7 @@ void capture_image(void* pvParameters)
         if(fb == NULL)
         {
             configPRINTF(("Failed to capture image\n"));
-            return;
+            break;
         }
         
         detect_apriltags(fb,(QueueHandle_t*)pvParameters);
@@ -104,5 +104,5 @@ void capture_image(void* pvParameters)
 
     }
 
-    return;
+    vTaskDelete(NULL);
 }
