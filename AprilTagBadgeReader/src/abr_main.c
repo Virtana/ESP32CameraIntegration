@@ -29,7 +29,7 @@
 
 #include "stdio.h"
 
-QueueHandle_t queue_handle;
+QueueHandle_t apriltag_detections_queue;
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
@@ -68,26 +68,24 @@ int app_main(void)
 {
     prvMiscInitialization();
 
-    queue_handle = xQueueCreate(20,sizeof(long int)); //holds 10 detected tags (and timestamp for each)
+    apriltag_detections_queue = xQueueCreate(10,sizeof(struct apriltag_detection_info));
 
-    if(queue_handle == NULL)
+    if(apriltag_detections_queue == NULL)
     {
         configPRINTF(("Failed to create queue\n"));
         return -1;
     }
 
-    printf("QUEUE DEBUG: %i\n", uxQueueMessagesWaiting(queue_handle));
-
     if(SYSTEM_Init() == pdPASS)
     {
-        mqtt_main(&queue_handle);
+        mqtt_main(&apriltag_detections_queue);
     }
 
     initialize_camera();
 
     //Stack width defined by macro portSTACK_TYPE = uint8_t. Stack size = StackDepth x sizeof(portSTACK_TYPE) = StackDepth
     //StackDepth of type uint16_t so max stack size is 0xFFFF = 65535
-    xTaskCreate(capture_image,"CaptureImageTask",65535,(void*)&queue_handle,4,NULL);
+    xTaskCreate(capture_image,"CaptureImageTask",65535,(void*)&apriltag_detections_queue,5,NULL);
 
     return 0;
 }

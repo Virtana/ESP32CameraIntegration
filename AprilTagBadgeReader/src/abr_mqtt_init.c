@@ -208,7 +208,7 @@ void mqtt_task(void* pvParameters)
         _cleanup();
 }
 
-void mqtt_main(QueueHandle_t* queue_handle)
+void mqtt_main(QueueHandle_t* apriltag_detections_queue)
 {
     vDevModeKeyProvisioning();
 
@@ -229,7 +229,7 @@ void mqtt_main(QueueHandle_t* queue_handle)
     sntp_main();
 
     //Iot_CreateDetachedThread(mqtt_task,(void*) queue_handle, 4, democonfigDEMO_STACKSIZE );
-    xTaskCreate(mqtt_task,"mqttTask",configMINIMAL_STACK_SIZE * 8,(void*)queue_handle,5,NULL);
+    xTaskCreate(mqtt_task,"mqttTask",configMINIMAL_STACK_SIZE * 8,(void*)apriltag_detections_queue,4,NULL);
 }
 
 static void _onNetworkStateChangeCallback( uint32_t network,

@@ -3,6 +3,6 @@
 
 #include "queue.h"
 
-void mqtt_main(QueueHandle_t* queue_handle);
+void mqtt_main(QueueHandle_t* apriltag_detections_queue);
 
 #endif

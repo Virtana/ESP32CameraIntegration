@@ -21,7 +21,7 @@
 #include "esp_system.h"
 #include "sensor.h"
 
-void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
+void detect_apriltags(camera_fb_t* fb,QueueHandle_t* apriltag_detections_queue)
 {   
     image_u8_t* image = NULL;
 
@@ -105,17 +105,23 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* queue_handle)
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
 
-            long int detected_id = detection->id;
+            // long int detected_id = detection->id;
 
-            long int now; //current time (seconds since epoch)
-            time(&now);
+            // long int now; //current time (seconds since epoch)
+
+            struct apriltag_detection_info det;
+
+            det.detected_id = detection->id;
+            time(&det.now);
+
+            //time(&now);
 
 
-            if(queue_handle!=NULL)
+            if(apriltag_detections_queue!=NULL)
             {
                 configPRINTF(("Sending to queue\n"));
-                xQueueSend(*queue_handle,(void*)&detected_id,pdMS_TO_TICKS(500));
-                xQueueSend(*queue_handle,(void*)&now,pdMS_TO_TICKS(500));
+                xQueueSend(*apriltag_detections_queue,(void*)&det,pdMS_TO_TICKS(500));
+                //xQueueSend(*apriltag_detections_queue,(void*)&now,pdMS_TO_TICKS(500));
             }
         
             apriltag_detection_destroy(detection);

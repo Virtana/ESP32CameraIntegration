@@ -22,6 +22,8 @@
 
 #include "abr_mqtt.h"
 #include "abr_camera.h"
+#include "abr_config.h"
+#include "abr_apriltags.h"
 
 #ifndef IOT_DEMO_MQTT_TOPIC_PREFIX
     #define IOT_DEMO_MQTT_TOPIC_PREFIX           "badgeReader"
@@ -463,7 +465,7 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
  * otherwise.
  */
 int publish( IotMqttConnection_t mqttConnection,
-                                const char ** pTopicNames , QueueHandle_t* queue_handle)
+                                const char ** pTopicNames , QueueHandle_t* apriltag_detections_queue)
 {
     int status = EXIT_SUCCESS;
     IotMqttError_t publishStatus = IOT_MQTT_STATUS_PENDING;
@@ -498,33 +500,35 @@ int publish( IotMqttConnection_t mqttConnection,
 
     while(true)
     {
-        configPRINTF(("PUBLISH TASK\n"));
+        DEBUG_PRINTF(("PUBLISH TASK\n"));
 
 
         /* PUBLISH a message. This is an asynchronous function that notifies of
         * completion through a callback. */
-        while(uxQueueMessagesWaiting(*queue_handle) >0)//publish_message == true
+        while(uxQueueMessagesWaiting(*apriltag_detections_queue) >0)//publish_message == true
         {
             //JSON Format
             char format[] = {
                 "{"
-                "\"id\":\"%ld\","
+                "\"id\":\"%i\","
                 "\"mac\":\"%X%X%X%X%X%X\","
                 "\"ts\":\"%ld\""
                 "}"
             };
             
-            long int received_id = 0;
-            long int ts = 0;
+            //long int received_id = 0;
+            //long int ts = 0;
 
-            xQueueReceive(*queue_handle,&received_id,pdMS_TO_TICKS(500));
-            xQueueReceive(*queue_handle,&ts,pdMS_TO_TICKS(500));
+            struct apriltag_detection_info det;
+
+            xQueueReceive(*apriltag_detections_queue,&det,pdMS_TO_TICKS(500));
+            //xQueueReceive(*apriltag_detections_queue,&ts,pdMS_TO_TICKS(500));
 
             uint8_t dev_mac[6];
 
             esp_efuse_mac_get_default(dev_mac);
 
-            status = snprintf( pPublishPayload,100,format,received_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5],ts);
+            status = snprintf( pPublishPayload,100,format,det.detected_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5],det.now);
 
             if( status < 0 )
             {
@@ -550,7 +554,7 @@ int publish( IotMqttConnection_t mqttConnection,
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        vTaskDelay(pdMS_TO_TICKS(100));
 
     }
     return status;
@@ -576,9 +580,8 @@ int run_mqtt( bool awsIotMqttMode,
                  const char * pIdentifier,
                  void * pNetworkServerInfo,
                  void * pNetworkCredentialInfo,
-                 const IotNetworkInterface_t * pNetworkInterface ,QueueHandle_t* queue_handle)
+                 const IotNetworkInterface_t * pNetworkInterface ,QueueHandle_t* apriltag_detections_queue)
 {
-    printf("QUEUE DEBUG4: %i\n", uxQueueMessagesWaiting( *queue_handle));
 
     /* Return value of this function and the exit status of this program. */
     int status = EXIT_SUCCESS;
@@ -624,7 +627,7 @@ int run_mqtt( bool awsIotMqttMode,
     if( status == EXIT_SUCCESS )
     {
         /* PUBLISH (and wait) for all messages. */
-        status = publish(mqttConnection,pTopics,queue_handle);
+        status = publish(mqttConnection,pTopics,apriltag_detections_queue);
     }
 
     if( status == EXIT_SUCCESS )
