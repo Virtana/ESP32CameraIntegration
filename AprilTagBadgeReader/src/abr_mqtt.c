@@ -203,7 +203,7 @@ static void _mqttSubscriptionCallback( void * param1,
  * @return `EXIT_SUCCESS` if all libraries were successfully initialized;
  * `EXIT_FAILURE` otherwise.
  */
-static int _initializeDemo( void )
+static int _initialize_mqtt( void )
 {
     int status = EXIT_SUCCESS;
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
@@ -486,17 +486,11 @@ int publish( IotMqttConnection_t mqttConnection,
 
     IotLogInfo("Publishing message:");
 
-        /* Pass the PUBLISH number to the operation complete callback. */
-        publishComplete.pCallbackContext = NULL;
+    /* Pass the PUBLISH number to the operation complete callback. */
+    publishComplete.pCallbackContext = NULL;
 
-        /* Choose a topic name (round-robin through the array of topic names). */
-        publishInfo.pTopicName = pTopicNames[0];
-
-
-        //initialize_camera();
-
-        //Stack is 32 bits wide. For 3e6 bytes allocated, stack depth = (3e6)/(32/8) = 750000
-        //xTaskCreate(capture_image,"CaptureImageTask",750000,(void*)&queue_handle,5,NULL);
+    /* Choose a topic name (round-robin through the array of topic names). */
+    publishInfo.pTopicName = pTopicNames[0];
 
     while(true)
     {
@@ -516,13 +510,9 @@ int publish( IotMqttConnection_t mqttConnection,
                 "}"
             };
             
-            //long int received_id = 0;
-            //long int ts = 0;
-
             struct apriltag_detection_info det;
 
             xQueueReceive(*apriltag_detections_queue,&det,pdMS_TO_TICKS(500));
-            //xQueueReceive(*apriltag_detections_queue,&ts,pdMS_TO_TICKS(500));
 
             uint8_t dev_mac[6];
 
@@ -599,7 +589,7 @@ int run_mqtt( bool awsIotMqttMode,
     bool librariesInitialized = false, connectionEstablished = false;
 
     /* Initialize the libraries required for this demo. */
-    status = _initializeDemo();
+    status = _initialize_mqtt();
 
     if( status == EXIT_SUCCESS )
     {

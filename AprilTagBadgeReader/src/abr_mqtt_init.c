@@ -86,8 +86,16 @@ static uint32_t _waitForDemoNetworkConnection( demoContext_t * pDemoContext )
     return _getConnectedNetworkForDemo( pDemoContext );
 }
 
-static int _initialize( demoContext_t * pContext )
+static int _initialize()
 {
+    static demoContext_t mqttContext =
+    {
+        .networkTypes                = AWSIOT_NETWORK_TYPE_WIFI,
+        .demoFunction                = NULL,
+        .networkConnectedCallback    = NULL,
+        .networkDisconnectedCallback = NULL
+    };
+
     int status = EXIT_SUCCESS;
     bool commonLibrariesInitialized = false;
     bool semaphoreCreated = false;
@@ -129,9 +137,9 @@ static int _initialize( demoContext_t * pContext )
     if( status == EXIT_SUCCESS )
     {
         /* Subscribe for network state change from Network Manager. */
-        if( AwsIotNetworkManager_SubscribeForStateChange( pContext->networkTypes,
+        if( AwsIotNetworkManager_SubscribeForStateChange( (&mqttContext)->networkTypes,
                                                           _onNetworkStateChangeCallback,
-                                                          pContext,
+                                                          &mqttContext,
                                                           &subscription ) != pdTRUE )
         {
             IotLogError( "Failed to subscribe network state change callback." );
@@ -155,13 +163,13 @@ static int _initialize( demoContext_t * pContext )
     if( status == EXIT_SUCCESS )
     {
         /* Wait for network configured for the demo to be initialized. */
-        demoConnectedNetwork = _getConnectedNetworkForDemo( pContext );
+        demoConnectedNetwork = _getConnectedNetworkForDemo( &mqttContext );
 
         if( demoConnectedNetwork == AWSIOT_NETWORK_TYPE_NONE )
         {
             /* Network not yet initialized. Block for a network to be initialized. */
             IotLogInfo( "No networks connected for the demo. Waiting for a network connection. " );
-            demoConnectedNetwork = _waitForDemoNetworkConnection( pContext );
+            demoConnectedNetwork = _waitForDemoNetworkConnection( &mqttContext );
         }
     }
 
@@ -205,30 +213,19 @@ void mqtt_task(void* pvParameters)
 
     status = run_mqtt( true, clientcredentialIOT_THING_NAME, pConnectionParams,pCredentials,pNetworkInterface, (QueueHandle_t*)pvParameters);
 
-        _cleanup();
+    _cleanup();
 }
 
 void mqtt_main(QueueHandle_t* apriltag_detections_queue)
 {
     vDevModeKeyProvisioning();
 
-    static demoContext_t mqttDemoContext =
-    {
-        .networkTypes                = AWSIOT_NETWORK_TYPE_WIFI,
-        .demoFunction                = NULL,
-        .networkConnectedCallback    = NULL,
-        .networkDisconnectedCallback = NULL
-    };
-
     demoConnectedNetwork = AWSIOT_NETWORK_TYPE_WIFI;
-    networkConnectedCallback_t networkConnectedCallback = NULL;
-    networkDisconnectedCallback_t networkDisconnectedCallback = NULL;
 
-    _initialize(&mqttDemoContext);
+    _initialize();
 
     sntp_main();
 
-    //Iot_CreateDetachedThread(mqtt_task,(void*) queue_handle, 4, democonfigDEMO_STACKSIZE );
     xTaskCreate(mqtt_task,"mqttTask",configMINIMAL_STACK_SIZE * 8,(void*)apriltag_detections_queue,4,NULL);
 }
 

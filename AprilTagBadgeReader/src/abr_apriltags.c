@@ -105,23 +105,15 @@ void detect_apriltags(camera_fb_t* fb,QueueHandle_t* apriltag_detections_queue)
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
 
-            // long int detected_id = detection->id;
-
-            // long int now; //current time (seconds since epoch)
-
             struct apriltag_detection_info det;
 
             det.detected_id = detection->id;
             time(&det.now);
 
-            //time(&now);
-
-
             if(apriltag_detections_queue!=NULL)
             {
                 configPRINTF(("Sending to queue\n"));
                 xQueueSend(*apriltag_detections_queue,(void*)&det,pdMS_TO_TICKS(500));
-                //xQueueSend(*apriltag_detections_queue,(void*)&now,pdMS_TO_TICKS(500));
             }
         
             apriltag_detection_destroy(detection);

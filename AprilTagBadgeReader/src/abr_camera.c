@@ -100,7 +100,7 @@ void capture_image(void* pvParameters)
 
         esp_camera_fb_return(fb);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
 
     }
 
