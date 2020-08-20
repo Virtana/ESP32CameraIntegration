@@ -616,7 +616,8 @@ int run_mqtt( bool awsIotMqttMode,
 
     if( status == EXIT_SUCCESS )
     {
-        /* PUBLISH (and wait) for all messages. */
+        //Publish all messages in queue.
+        //TODO: Wait for acknowledgement that all published messages are received
         status = publish(mqttConnection,pTopics,apriltag_detections_queue);
     }
 

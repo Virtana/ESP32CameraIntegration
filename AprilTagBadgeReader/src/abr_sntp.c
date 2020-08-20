@@ -12,7 +12,6 @@
 #include "esp_attr.h"
 #include "esp_sleep.h"
 #include "nvs_flash.h"
-//#include "protocol_examples_common.h"
 #include "esp_sntp.h"
 
 static const char *TAG = "example";
@@ -29,29 +28,27 @@ void sntp_main()
 
     time(&now);
     localtime_r(&now, &timeinfo);
-    // Is time set? If not, tm_year will be (1970 - 1900).
-    if (timeinfo.tm_year < (2016 - 1900)) {
-        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.\n");
-        obtain_time();
-        // update 'now' variable with current time
-        time(&now);
-    }
+
+    ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.\n");
+    obtain_time(10);
+    // update 'now' variable with current time
+    time(&now);
+    
 
     char strftime_buf[64];
 
     // Set timezone to Eastern Standard Time and print local time
     setenv("TZ", "EST5EDT,M3.2.0/2,M11.1.0", 1);
-    //setenv("TZ", "GMT-4", 1);
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time is: %s", strftime_buf);
 }
 
-void obtain_time()
+//Max time allowed for attemting to synchronize time = retries * 2 seconds
+void obtain_time(int retries)
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
-    //ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK( esp_event_loop_create_default() );
     
     initialize_sntp();
@@ -59,10 +56,10 @@ void obtain_time()
     time_t now = 0;
     struct tm timeinfo = { 0 };
     int retry = 0;
-    const int retry_count = 10;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retries) {
+        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retries);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
     time(&now);
     localtime_r(&now, &timeinfo);
