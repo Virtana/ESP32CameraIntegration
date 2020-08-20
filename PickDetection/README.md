@@ -29,14 +29,16 @@ To enable the environment:
 Deactivate by running `deactivate` in terminal. Within the **ESP32CameraIntegration** folder, 
 * ` $ pip3 install --index-url=https://pypi.python.org/simple/ -r amazon-freertos/vendors/espressif/esp-idf/requirements.txt`
 
-Before using the code base, please follow [Getting Started with FreeRTOS]([https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html)) to ensure that all necessary prerequisites and configuration (CMake, Toolchain, AWS CLI Configuration etc.) is done. Do note that the packages below may need to be installed prior to performing **Configure the FreeRTOS demo applications >Step 5**. This would all depend on whether a clean virtual environment has been setup as directed.
+Before using the code base, please follow [Getting Started with Amazon FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#setup-espressif-prereqs) to ensure that all necessary prerequisites and configuration (IAM User, CMake, Toolchain, etc.) are done. Please do up to and inclusive of **Establish a serial connection**. 
+
+Additionally, configuration for the FreeRTOS demo is required to use the code base as there are overlapping fundamental frameworks such as the AWS CLI that are required. Follow [Download and configure FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#download-and-configure-espressif) ONLY. Do note that FreeRTOS is included in this repository as a submodule and <ins>should not be downloaded</ins> as directed in the beginning. The packages below may need to be installed prior to performing **Configure the FreeRTOS demo applications >Step 5**. This would all depend on whether a clean virtual environment has been setup as directed by this README.
 
 *  ` $ pip install -U wheel`
 *  ` $ pip install tornado`
 *  ` $ pip install boto3`
 
 ##### 3. Building and Flashing
-The code base includes a build executable specific to the ESP-EYE. Within `../ESP32CameraIntegration/PickDetection/`,  build the package using `$./build.sh`  and the package can be made and flashed using `make flash` or `make flash monitor`. The latter includes a serial monitor in the terminal to view the output from the board at runtime. Run `make monitor` to view the output of runtime for an already flashed board. 
+The code base assumes a Linux environment with a build executable specific to the ESP-EYE. Within `../ESP32CameraIntegration/PickDetection/`,  build the package using `$./build.sh`. Ensure that [build.sh script](https://github.com/Virtana/ESP32CameraIntegration/blob/master/PickDetection/build.sh) is executable. If not, create its executable using `chmod a+x build.sh`. Within the build folder, the package can be made and flashed using `make flash` or `make flash monitor`. The latter includes a serial monitor in the terminal to view the output from the board at runtime. Run `make monitor` to view the output of runtime for an already flashed board. 
 
 ##### *NOTE:*
 Unless integration is done with this code base to include additional threads and idle tasks, building the package as is should throw errors pertaining to *vApplicationTickHook* and *vApplicationIdleHook*. This is corrected by altering the **FreeRTOSConfig.h** file located in the *amazon-freetos* submodule present at `~../ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files`.
