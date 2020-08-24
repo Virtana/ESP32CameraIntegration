@@ -14,5 +14,5 @@
 void app_downsample(camera_fb_t *fb);
 bool app_motion_detect();
 void app_update_frame();
-void pickdet_http_motion_detect(camera_fb_t *fb);
 void pickdet_independent_motion_detect();
+void motion_process(camera_fb_t *fb);

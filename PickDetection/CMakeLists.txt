@@ -7,7 +7,6 @@ include_directories(include)
 add_executable(pickdetection src/main.c 
                 src/pickdet_camera.c 
                 src/pickdet_motion.c 
-                src/pickdet_wifi.c 
                 src/pickdet_http_display.c 
                 src/pickdet_mqtt.c 
                 src/pickdet_launcher.c 

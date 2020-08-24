@@ -40,7 +40,6 @@
 #include "aws_application_version.h"
 
 #include "pickdet_camera.h"
-#include "pickdet_wifi.h"
 #include "pickdet_http_display.h"
 #include "pickdet_launcher.h"
 
@@ -119,23 +118,23 @@ int app_main( void )
     pickdet_cam_init();
     xStructQueue = xQueueCreate(10,sizeof(message));
 
-    if( SYSTEM_Init() == pdPASS )
-    {
-        #ifdef HTTP_STREAM
-            //STREAMING AND MOTION DETECTION
-             pickdet_wifi_main();
-             Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+6,3*configMINIMAL_STACK_SIZE);
-        #else
-            //MQTT PUBLISHING AND MOTION DETECTION - NO HTTP STREAMING
-        static Context_t mqttContext =
+    static Context_t mqttContext =
         {
             .networkTypes                = AWSIOT_NETWORK_TYPE_WIFI,
             .mqttFunction                = pickdet_mqtt_main,
             .networkConnectedCallback    = NULL,
             .networkDisconnectedCallback = NULL
         };
-        Iot_CreateDetachedThread(runMqtt_main, &mqttContext, tskIDLE_PRIORITY + 2, STACKSIZE);
-        Iot_CreateDetachedThread(pickdet_independent_motion_detect, NULL,tskIDLE_PRIORITY + 3,STACKSIZE);
+
+    if( SYSTEM_Init() == pdPASS )
+    {
+        Iot_CreateDetachedThread(runMqtt_main, &mqttContext, tskIDLE_PRIORITY + 3, STACKSIZE);
+        #ifdef HTTP_STREAM
+            //HTTP STREAMING, MOTION DETECTION & MQTT PUBLISHING
+            Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+4,3*configMINIMAL_STACK_SIZE);
+        #else
+            //MQTT PUBLISHING & MOTION DETECTION, NO HTTP STREAMING
+            Iot_CreateDetachedThread(pickdet_independent_motion_detect, NULL,tskIDLE_PRIORITY + 4,STACKSIZE);
         #endif
     }   
     return 0;
