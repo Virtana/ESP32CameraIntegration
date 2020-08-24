@@ -81,4 +81,4 @@ Replace the macro argument in the files to change the following:
 
 ##### *main.c*
 
-Select between code operation by commenting/uncommenting `#define HTTP_STREAM`.When defined, motion detection is a coupled task with HTTP streaming to a web server, accessible via your browser with default IP `192.168.4.1/`. When undefined, motion detection is run in tandem with a task which publishes MQTT messages to IOT Core each time motion is detected. 
+Select between code operation by commenting/uncommenting `#define HTTP_STREAM`.When defined, motion detection is a coupled task with HTTP streaming to a web server. Connect to the ESP-EYE Access Point and access stream via your browser with default URL `192.168.4.1/stream`. When undefined, motion detection is run as an independent task without the option to view. <ins>Note</ins>:The current trade-off is motion detection with HTTP streaming does not provide a satisfactory stream frame rate, so the video is heavily lagged. Additionally, it is not as lightweight when compared to the independent motion detection task. Both modes of operation publishes MQTT messages to IOT Core each time motion is detected. 
