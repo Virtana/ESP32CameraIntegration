@@ -13,10 +13,10 @@ Detects apriltags in image and prints unique ids detected.
 */
 void detect_apriltags(camera_fb_t* fb,QueueHandle_t* apriltag_detections_queue);
 
-struct apriltag_detection_info
+struct apriltagDetectionInfo
 {
-    int detected_id;
-    long int now; //current time in seconds since epoch
+    int id;
+    long int ts; //current time in seconds since epoch
 };
 
 #endif

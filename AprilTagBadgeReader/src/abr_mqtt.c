@@ -510,7 +510,7 @@ int publish( IotMqttConnection_t mqttConnection,
                 "}"
             };
             
-            struct apriltag_detection_info det;
+            struct apriltagDetectionInfo det;
 
             xQueueReceive(*apriltag_detections_queue,&det,pdMS_TO_TICKS(500));
 
@@ -518,7 +518,7 @@ int publish( IotMqttConnection_t mqttConnection,
 
             esp_efuse_mac_get_default(dev_mac);
 
-            status = snprintf( pPublishPayload,100,format,det.detected_id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5],det.now);
+            status = snprintf( pPublishPayload,100,format,det.id,dev_mac[0],dev_mac[1],dev_mac[2],dev_mac[3],dev_mac[4],dev_mac[5],det.ts);
 
             if( status < 0 )
             {

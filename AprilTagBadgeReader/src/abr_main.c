@@ -68,7 +68,7 @@ int app_main(void)
 {
     prvMiscInitialization();
 
-    apriltag_detections_queue = xQueueCreate(10,sizeof(struct apriltag_detection_info));
+    apriltag_detections_queue = xQueueCreate(10,sizeof(struct apriltagDetectionInfo));
 
     if(apriltag_detections_queue == NULL)
     {
