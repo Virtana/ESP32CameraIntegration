@@ -8,7 +8,7 @@ The motion detection algorithm implements the principles as detailed [here](http
 The operating principle is the comparison of consecutive camera frames. The frames are downsampled initially, to decrease the processing time for an application that is meant to run real-time.  With predefined thresholds, both the `BLOCK_DIFF_THRESHOLD` and `IMAGE_DIFF_THRESHOLD`, and choice of block size in pixelating the image,  the sensitivity of detection can be varied to account for application context and noise.
 
 
-### Workspace Setup
+### Workspace Setup (Linux Only)
 ##### 1. Clone Repository
 * Choose your directory for cloning this repository and run `$ git clone --recursive {HTTPS/SSH_LINK}`
 ##### 2. Prerequisite Installation
@@ -29,19 +29,23 @@ To enable the environment:
 Deactivate by running `deactivate` in terminal. Within the **ESP32CameraIntegration** folder, 
 * ` $ pip3 install --index-url=https://pypi.python.org/simple/ -r amazon-freertos/vendors/espressif/esp-idf/requirements.txt`
 
-Before using the code base, please follow [Getting Started with Amazon FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#setup-espressif-prereqs) to ensure that all necessary prerequisites and configuration (IAM User, CMake, Toolchain, etc.) are done. Please do up to and inclusive of **Establish a serial connection**. 
+Before using the code base, please follow [Getting Started with Amazon FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#setup-espressif-prereqs) to ensure that all necessary prerequisites and configuration (IAM User, CMake, Toolchain, etc.) are done. After completing the **Establish a serial connection** section, return to this README. 
 
-Additionally, configuration for the FreeRTOS demo is required to use the code base as there are overlapping fundamental frameworks such as the AWS CLI that are required. Follow [Download and configure FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#download-and-configure-espressif) ONLY. Do note that FreeRTOS is included in this repository as a submodule and <ins>should not be downloaded</ins> as directed in the beginning. The packages below may need to be installed prior to performing **Configure the FreeRTOS demo applications >Step 5**. This would all depend on whether a clean virtual environment has been setup as directed by this README.
+We need to configure the FreeRTOS demo. Follow [Download and configure FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#download-and-configure-espressif) to do so and return to this README afterwards. Since FreeRTOS is included in this repository, <ins>skip the instructions at the beginning</ins> to download it. The packages below may need to be installed prior to performing **Configure the FreeRTOS demo applications >Step 5**. This would all depend on whether a clean virtual environment has been setup as directed by this README.
 
 *  ` $ pip install -U wheel`
 *  ` $ pip install tornado`
 *  ` $ pip install boto3`
 
 ##### 3. Building and Flashing
-The code base assumes a Linux environment with a build executable specific to the ESP-EYE. Within `../ESP32CameraIntegration/PickDetection/`,  build the package using `$./build.sh`. Ensure that [build.sh script](https://github.com/Virtana/ESP32CameraIntegration/blob/master/PickDetection/build.sh) is executable. If not, create its executable using `chmod a+x build.sh`. Within the build folder, the package can be made and flashed using `make flash` or `make flash monitor`. The latter includes a serial monitor in the terminal to view the output from the board at runtime. Run `make monitor` to view the output of runtime for an already flashed board. 
+Within `../ESP32CameraIntegration/PickDetection/`,  ensure the build.sh is executable: `chmod a+x build.sh`
+
+Build the package using `$./build.sh`. This generates the build files in the `build/` folder.
+
+Change directory to this folder using `cd build/` and build the binary and flash to the ESP-EYE using `make flash`. If you wish to view terminal output from the board during runtime, run `make flash monitor` instead. 
 
 ##### *NOTE:*
-Unless integration is done with this code base to include additional threads and idle tasks, building the package as is should throw errors pertaining to *vApplicationTickHook* and *vApplicationIdleHook*. This is corrected by altering the **FreeRTOSConfig.h** file located in the *amazon-freetos* submodule present at `~../ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files`.
+Building the package as is should throw errors pertaining to *vApplicationTickHook* and *vApplicationIdleHook*. This is corrected by altering the **FreeRTOSConfig.h** file located in the *amazon-freetos* submodule present at `~../ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files`.
 
 The parameters as defined for Lines 64 and 65 should be changed to match below.
 
@@ -86,4 +90,10 @@ Replace the {macro argument} in the files to change the following:
 
 ##### *main.c*
 
-Select between code operation by commenting/uncommenting `#define HTTP_STREAM`.When defined, motion detection is a coupled task with HTTP streaming to a web server. Connect to the ESP-EYE Access Point and access stream via your browser with default URL `192.168.4.1/stream`. When undefined, motion detection is run as an independent task without the option to view. <ins>Note</ins>:The current trade-off is motion detection with HTTP streaming does not provide a satisfactory stream frame rate, so the video is heavily lagged. Additionally, it is not as lightweight when compared to the independent motion detection task. Both modes of operation publishes MQTT messages to IOT Core each time motion is detected. 
+Select between between operating modes by commenting/uncommenting `#define HTTP_STREAM`.
+
+When defined, motion detection, MQTT message publishing and HTTP streaming is done. Connect to the ESP-EYE AP and access stream via your browser using `192.168.4.1/stream`by default. 
+<ins>Note</ins>: For this mode, motion detection is only done when connected to the AP. 
+
+When commented, only motion detection and MQTT publishing is done. 
+<ins>Note</ins>: Motion detection with HTTP streaming does not provide a satisfactory stream frame rate (1-2 fps); the video is heavily lagged. 
