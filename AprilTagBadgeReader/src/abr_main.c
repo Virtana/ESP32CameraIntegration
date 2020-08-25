@@ -1,14 +1,15 @@
-//#include "iot_config.h"
-
 /* FreeRTOS includes. */
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 
 /* AWS System includes. */
 #include "iot_system_init.h"
 #include "iot_logging_task.h"
+#include "iot_mqtt.h"
+#include "iot_config.h"
 
 #include "nvs_flash.h"
 
@@ -17,9 +18,18 @@
 #include "esp_interface.h"
 
 #include "aws_application_version.h"
+#include "aws_clientcredential.h"
+#include "aws_clientcredential_keys.h"
 
 #include "abr_camera.h"
+#include "abr_apriltags.h"
+#include "abr_pin_map.h"
+#include "abr_mqtt_init.h"
+#include "abr_mqtt.h"
 
+#include "stdio.h"
+
+QueueHandle_t apriltag_detections_queue;
 
 /* Logging Task Defines. */
 #define mainLOGGING_MESSAGE_QUEUE_LENGTH    ( 32 )
@@ -50,17 +60,32 @@ static void prvMiscInitialization( void )
     configPRINTF( ("Initializing FreeRTOS TCP stack\r\n") );
     vApplicationIPInit();
 #endif
+
 }
 
 
 int app_main(void)
 {
     prvMiscInitialization();
+
+    apriltag_detections_queue = xQueueCreate(10,sizeof(struct apriltagDetectionInfo));
+
+    if(apriltag_detections_queue == NULL)
+    {
+        configPRINTF(("Failed to create queue\n"));
+        return -1;
+    }
+
+    if(SYSTEM_Init() == pdPASS)
+    {
+        mqtt_main(&apriltag_detections_queue);
+    }
+
     initialize_camera();
 
     //Stack width defined by macro portSTACK_TYPE = uint8_t. Stack size = StackDepth x sizeof(portSTACK_TYPE) = StackDepth
     //StackDepth of type uint16_t so max stack size is 0xFFFF = 65535
-    xTaskCreate(capture_image,"CaptureImageTask",65535,NULL,5,NULL);
+    xTaskCreate(capture_image,"CaptureImageTask",65535,(void*)&apriltag_detections_queue,5,NULL);
 
     return 0;
 }

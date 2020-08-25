@@ -6,9 +6,10 @@ This is Track 4 of the [ESP32 Camera Integration Project](https://docs.google.co
 To flash ESP-EYE:
 - Run run_cmake.sh
 - `cd build`
-- Ensure PSRAM is enabled for image capturing and apriltag detection, because not enough memory is available.
+- Enable PSRAM for image capturing and apriltag detection and disable 'WiFi IRAM Speed Optimization'.
     - `make menuconfig`
-    - Component config > ESP32-specific > enable Support for external, SPI-connected RAM
+    - Component config > ESP32-specific > enable 'Support for external, SPI-connected RAM'
+    - Component config > Wi-Fi > disable 'WiFi IRAM Speed Optimization'
 - `make flash monitor`
 
 If PSRAM is not enabled, the following error occurs:
@@ -19,3 +20,5 @@ E (373) camera: Failed to allocate frame buffer\
 E (373) gpio: gpio_isr_handler_remove(396): GPIO isr service is not installed, call gpio_install_isr_service() first\
 E (383) camera: Camera init failed with error 0x101
 
+
+If 'WiFi IRAM Speed Optimization' is enabled, the linker reports that the program will not fit.

@@ -1,8 +1,13 @@
 
 #include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
+#include <time.h>
 
 #include "abr_apriltags.h"
 #include "abr_config.h"
+#include "abr_mqtt.h"
 
 #include "apriltag.h"
 #include "tag36h11.h"
@@ -10,9 +15,13 @@
 #include "pjpeg.h"
 #include "image_u8.h"
 
+#include "esp_camera.h"
+#include "img_converters.h"
+
+#include "esp_system.h"
 #include "sensor.h"
 
-void detect_apriltags(camera_fb_t* fb)
+void detect_apriltags(camera_fb_t* fb,QueueHandle_t* apriltag_detections_queue)
 {   
     image_u8_t* image = NULL;
 
@@ -45,6 +54,7 @@ void detect_apriltags(camera_fb_t* fb)
 
         pjpeg_t* pjpeg_image = NULL;
 
+
         pjpeg_image = pjpeg_create_from_buffer(fb->buf,fb->len,0,&error);
 
         if(pjpeg_image == NULL)
@@ -75,7 +85,7 @@ void detect_apriltags(camera_fb_t* fb)
 
 
     apriltag_detector_t* detector = apriltag_detector_create();
-	apriltag_family_t* family = tag36h11_create();
+    apriltag_family_t* family = tag36h11_create();
 
     apriltag_detector_add_family_bits(detector,family,1);
 
@@ -95,6 +105,14 @@ void detect_apriltags(camera_fb_t* fb)
 
             configPRINTF(("Det: %i => Family: %s | ID: %i\n",i+1,detection->family->name,detection->id));
 
+            struct apriltagDetectionInfo det;
+
+            det.id = detection->id;
+            time(&det.ts);
+
+            configPRINTF(("Sending to queue\n"));
+            xQueueSend(*apriltag_detections_queue,(void*)&det,pdMS_TO_TICKS(500));
+        
             apriltag_detection_destroy(detection);
         }
     }
@@ -102,9 +120,9 @@ void detect_apriltags(camera_fb_t* fb)
     configPRINTF(("\n"));
 
     //Free resources
-    zarray_destroy(detections);
     image_u8_destroy(image);
     tag36h11_destroy(family);
     apriltag_detector_destroy(detector);
+    zarray_destroy(detections);
 
 }

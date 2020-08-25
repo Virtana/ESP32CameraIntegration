@@ -1,14 +1,12 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 #include "abr_camera.h"
 #include "abr_apriltags.h"
 #include "abr_pin_map.h"
-#include "abr_config.h"
 
-#include "iot_system_init.h"
-#include "iot_logging_task.h"
 #include "esp_system.h"
 #include "sensor.h"
 
@@ -43,14 +41,14 @@ esp_err_t initialize_camera()
     config.pixel_format = PIXFORMAT_JPEG;
     config.frame_size = FRAMESIZE_VGA; // VGA = 640x480  (see sensors.h)
 
-    /*
-        FOR GRAYSCALE CAPTURE:
+    /* USING GRAYSCALE:
+        FRAMESIZE_QVGA (320X240px) - stable| inconsistent detection when image is taken at an angle. Takes ~1 second per detection
 
-        FRAMESIZE_QVGA (320X240px) -inconsistent detection when image is taken at an angle. Takes ~1 second per detection
-
-        FRAMESIZE_VGA (640x480px) - detection is significantly more consistent than QVGA. Takes ~4 seconds per detection.
+        FRAMESIZE_VGA (640x480px) - seems to be stable..............| , detection is significantly more consistent than QVGA. Takes ~4 seconds per detection.
             FRAMESIZE_VGA is only stable if alignment is set such that no line padding is added to image_u8 created (i.e. stride = width) (see abr_apriltags.c).
-            For default alignment (line padding added), program crashes (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.
+            For default alignment (line padding added), program crashes (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
+
+        FRAMESIZE > VGA - Instant crash! (Guru Meditation Error: Core  0 panic'ed (StoreProhibited). Exception was unhandled.)
     */
 
     //jpeg_quality determines the amount of loss during jpeg compression. This value ranges from 0-63, where 0 is almost lossless (highest quality, highest image size)
@@ -60,7 +58,7 @@ esp_err_t initialize_camera()
 
     /* ON ESP-EYE, IO13, IO14 is designed for JTAG by default,
      * to use it as generalized input,
-     * firstly declair it as pullup input */
+     * firstly declare it as pullup input */
     gpio_config_t conf;
     conf.mode = GPIO_MODE_INPUT;
     conf.pull_up_en = GPIO_PULLUP_ENABLE;
@@ -85,7 +83,8 @@ esp_err_t initialize_camera()
     return error;
 }
 
-void capture_image()
+
+void capture_image(void* pvParameters)
 {
     while(true)
     {
@@ -93,15 +92,16 @@ void capture_image()
 
         if(fb == NULL)
         {
-            configPRINTF(("Failed to capture image"));
+            configPRINTF(("Failed to capture image\n"));
             break;
         }
-
-        DEBUG_PRINTF(("BufferLength:%i\n",fb->len));
-        detect_apriltags(fb);
+        
+        detect_apriltags(fb,(QueueHandle_t*)pvParameters);
 
         esp_camera_fb_return(fb);
-        vTaskDelay(pdMS_TO_TICKS(500));
+
+        vTaskDelay(pdMS_TO_TICKS(750));
+
     }
 
     vTaskDelete(NULL);
