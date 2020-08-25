@@ -1,6 +1,5 @@
 #include "pickdet_http_display.h"
 
-
 static const char* TAG = "http_display";
 httpd_handle_t camera_httpd = NULL;
 
@@ -118,7 +117,7 @@ void wifi_init_soft()
     memset(&wifi_config, 0, sizeof(wifi_config_t));
     snprintf((char*)wifi_config.ap.ssid, 32, "%s", WIFI_SSID);
     wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
-    snprintf((char*)wifi_config.ap.password, 64, "%s", WIFI_SSID);
+    snprintf((char*)wifi_config.ap.password, 64, "%s", WIFI_PASSWORD);
     wifi_config.ap.max_connection = 1;
     wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
     if (strlen(WIFI_SSID) == 0) {
@@ -138,7 +137,7 @@ void wifi_init_soft()
 
 void pickdet_http_main()
 {
-    vTaskDelay(1500/ portTICK_RATE_MS);
+    vTaskDelay(300/ portTICK_RATE_MS);
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     wifi_init_soft();
