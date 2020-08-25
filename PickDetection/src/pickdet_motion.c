@@ -81,7 +81,6 @@ void motion_process(camera_fb_t *fb){
 
 //independent motion detection to be run as task. Accesses frame buffer independently with continuous detection process.
 void pickdet_independent_motion_detect(){
-    vTaskDelay(8000/ portTICK_RATE_MS);
     while(true){
         camera_fb_t *fb = esp_camera_fb_get();
         if (!fb)

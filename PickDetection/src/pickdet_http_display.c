@@ -1,5 +1,4 @@
 #include "pickdet_http_display.h"
- #include "mdns.h"
 
 
 static const char* TAG = "http_display";
@@ -103,34 +102,26 @@ esp_err_t stream_handler(httpd_req_t *req)
     return res;
 }
 
-#define clientcredentialWIFI_SSID    "WIFI123"
-#define clientcredentialWIFI_PASSWORD   "hunter2"
-#define EXAMPLE_IP_ADDR            "192.168.4.1"
-
-
 void wifi_init_soft()
 {
-    if (strcmp(EXAMPLE_IP_ADDR, "192.168.4.1"))
-    {
-        int a, b, c, d;
-        sscanf(EXAMPLE_IP_ADDR, "%d.%d.%d.%d", &a, &b, &c, &d);
-        tcpip_adapter_ip_info_t ip_info;
-        IP4_ADDR(&ip_info.ip, a, b, c, d);
-        IP4_ADDR(&ip_info.gw, a, b, c, d);
-        IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
-        ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(WIFI_IF_AP));
-        ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(WIFI_IF_AP, &ip_info));
-        ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(WIFI_IF_AP));
-    }
+    int a, b, c, d;
+    sscanf(EXAMPLE_IP_ADDR, "%d.%d.%d.%d", &a, &b, &c, &d);
+    tcpip_adapter_ip_info_t ip_info;
+    IP4_ADDR(&ip_info.ip, a, b, c, d);
+    IP4_ADDR(&ip_info.gw, a, b, c, d);
+    IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(WIFI_IF_AP));
+    ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(WIFI_IF_AP, &ip_info));
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(WIFI_IF_AP));
 
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config_t));
-    snprintf((char*)wifi_config.ap.ssid, 32, "%s", clientcredentialWIFI_SSID);
+    snprintf((char*)wifi_config.ap.ssid, 32, "%s", WIFI_SSID);
     wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
-    snprintf((char*)wifi_config.ap.password, 64, "%s", clientcredentialWIFI_PASSWORD);
+    snprintf((char*)wifi_config.ap.password, 64, "%s", WIFI_SSID);
     wifi_config.ap.max_connection = 1;
     wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    if (strlen(clientcredentialWIFI_PASSWORD) == 0) {
+    if (strlen(WIFI_SSID) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
     if (strlen("")) {
@@ -139,60 +130,16 @@ void wifi_init_soft()
         wifi_config.ap.channel = channel;
     }
 
-    //ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config);
 
     ESP_LOGI("HTTP", "wifi_init_softap finished.SSID:%s password:%s",
-             clientcredentialWIFI_SSID, clientcredentialWIFI_PASSWORD);
+             WIFI_SSID, WIFI_PASSWORD);
 }
-
-static int s_retry_num = 0;
-
-
-static esp_err_t event_handler(void *ctx, system_event_t *event)
-{
-    switch(event->event_id) {
-    case SYSTEM_EVENT_AP_STACONNECTED:
-        ESP_LOGI(TAG, "station:" MACSTR " join, AID=%d",
-                 MAC2STR(event->event_info.sta_connected.mac),
-                 event->event_info.sta_connected.aid);
-        break;
-    case SYSTEM_EVENT_AP_STADISCONNECTED:
-        ESP_LOGI(TAG, "station:" MACSTR "leave, AID=%d",
-                 MAC2STR(event->event_info.sta_disconnected.mac),
-                 event->event_info.sta_disconnected.aid);
-        break;
-    case SYSTEM_EVENT_STA_START:
-        esp_wifi_connect();
-        break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI(TAG, "got ip:%s",
-                 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-        s_retry_num = 0;
-        break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        {
-            if (s_retry_num < 5) {
-                esp_wifi_connect();
-                s_retry_num++;
-                ESP_LOGI(TAG,"retry to connect to the AP");
-            }
-            ESP_LOGI(TAG,"connect to the AP fail");
-            break;
-        }
-    default:
-        break;
-    }
-    mdns_handle_system_event(ctx, event);
-    return ESP_OK;
-}
-
 
 void pickdet_http_main()
 {
-    vTaskDelay(5000/ portTICK_RATE_MS);
+    vTaskDelay(1500/ portTICK_RATE_MS);
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK(esp_wifi_init(&config));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     wifi_init_soft();
 

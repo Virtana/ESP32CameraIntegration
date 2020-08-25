@@ -49,9 +49,7 @@
 #define STACKSIZE   ( configMINIMAL_STACK_SIZE * 7 )
 
 //uncomment for streaming with motion detection 
-//#define HTTP_STREAM
-
-static const char *TAG = "STATUS";
+#define HTTP_STREAM
 
 /*-----------------------------------------------------------*/
 
@@ -134,7 +132,7 @@ int app_main( void )
             Iot_CreateDetachedThread(pickdet_http_main, NULL,tskIDLE_PRIORITY+4,3*configMINIMAL_STACK_SIZE);
         #else
             //MQTT PUBLISHING & MOTION DETECTION, NO HTTP STREAMING
-            Iot_CreateDetachedThread(pickdet_independent_motion_detect, NULL,tskIDLE_PRIORITY + 4,STACKSIZE);
+            Iot_CreateDetachedThread(pickdet_independent_motion_detect, NULL,tskIDLE_PRIORITY + 3,STACKSIZE);
         #endif
     }   
     return 0;
