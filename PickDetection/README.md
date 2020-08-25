@@ -60,7 +60,7 @@ Additionally, any errors thrown during runtime pertaining to failure of the came
 
 ### Configuration for Use
 
-Replace the macro argument in the files to change the following:
+Replace the {macro argument} in the files to change the following:
 
 ##### *pickdet_camera.h*
 
@@ -78,6 +78,11 @@ Replace the macro argument in the files to change the following:
 - Image difference threshold `#define IMAGE_DIFF_THRESHOLD {IMAGE_DIFF_VALUE}`
 
 **NOTE:** The difference thresholds are only valid for 0 < `BLOCK_DIFF_THRESHOLD` < 1 and 0 < `IMAGE_DIFF_THRESHOLD` < 1. The width and height MUST reflect the resolution selected in **pickdet_camera.h**. An automated definition of `WIDTH` and `HEIGHT` dependent upon `CAMERA_FRAME_SIZE` is to be done.
+
+##### *pickdet_http_display.h*
+- Desired Access Point (AP) SSID `#define WIFI_SSID "{SSID}"`
+- Desired Access Point (AP) password `#define WIFI_PASSWORD "{PASSWORD}"`
+- Desired IP for accessing stream `#define EXAMPLE_IP_ADDR "{#.#.#.#}"`
 
 ##### *main.c*
 
