@@ -137,7 +137,7 @@ void wifi_init_soft()
 
 void pickdet_http_main()
 {
-    vTaskDelay(300/ portTICK_RATE_MS);
+    vTaskDelay(300/ portTICK_RATE_MS); //wait for MQTT Wifi and STA initialization before configuring AP
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     wifi_init_soft();
