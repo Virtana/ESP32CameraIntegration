@@ -26,33 +26,35 @@ Create a folder for virtual environments. To create an environment, within this 
 To enable the environment:
 * ` $ {PATH_TO_VIRTUAL_ENV}/bin/activate`
 
-Deactivate by running `deactivate` in terminal. Within the **ESP32CameraIntegration** folder, 
+To deactivate, run `deactivate` in terminal. In the root folder of the repository, run 
 * ` $ pip3 install --index-url=https://pypi.python.org/simple/ -r amazon-freertos/vendors/espressif/esp-idf/requirements.txt`
 
-Before using the code base, please follow [Getting Started with Amazon FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#setup-espressif-prereqs) to ensure that all necessary prerequisites and configuration (IAM User, CMake, Toolchain, etc.) are done. After completing the **Establish a serial connection** section, return to this README. 
+Start by following the [Getting Started with Amazon FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#setup-espressif-prereqs) guide. After completing the **Establish a serial connection** section, return to this README. 
 
-We need to configure the FreeRTOS demo. Follow [Download and configure FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#download-and-configure-espressif) to do so and return to this README afterwards. Since FreeRTOS is included in this repository, <ins>skip the instructions at the beginning</ins> to download it. The packages below may need to be installed prior to performing **Configure the FreeRTOS demo applications >Step 5**. This would all depend on whether a clean virtual environment has been setup as directed by this README.
+##### 3. Configure FreeRTOS Demo 
+
+Follow [Download and configure FreeRTOS](https://docs.aws.amazon.com/freertos/latest/userguide/getting_started_espressif.html#download-and-configure-espressif) and return to this README. FreeRTOS is already included in this repository, so <ins>skip the instructions to download it </ins>. 
+
+If you encounter problems with Step 5 of the demo configuration guide, install the following packages by running:
 
 *  ` $ pip install -U wheel`
 *  ` $ pip install tornado`
 *  ` $ pip install boto3`
 
-##### 3. Building and Flashing
-Within `../ESP32CameraIntegration/PickDetection/`,  ensure the build.sh is executable: `chmod a+x build.sh`
+##### 4. Building and Flashing
+Make the build.sh script in `ESP32CameraIntegration/PickDetection/` executable: `chmod a+x build.sh`
 
 Build the package using `$./build.sh`. This generates the build files in the `build/` folder.
 
 Change directory to this folder using `cd build/` and build the binary and flash to the ESP-EYE using `make flash`. If you wish to view terminal output from the board during runtime, run `make flash monitor` instead. 
 
 ##### *NOTE:*
-Building the package as is should throw errors pertaining to *vApplicationTickHook* and *vApplicationIdleHook*. This is corrected by altering the **FreeRTOSConfig.h** file located in the *amazon-freetos* submodule present at `~../ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files`.
-
-The parameters as defined for Lines 64 and 65 should be changed to match below.
+If there are build errors which reference *vApplicationTickHook* and *vApplicationIdleHook*, in the **FreeRTOSConfig.h** file located in `ESP32CameraIntegration/amazon-freertos/vendors/espressif/boards/esp32/aws_demos/config_files/`, change the macro arguments to reflect those below.
 
 - `#define configUSE_IDLE_HOOK		0`	
 - `#define configUSE_TICK_HOOK		0`
 
-Additionally, any errors thrown during runtime pertaining to failure of the camera, its sensor or the inability to retreive frame should be resolved as follows: 
+Additionally, any errors thrown during runtime pertaining to failure of the camera, its sensor or the inability to retrieve frame should be resolved as follows: 
 
 	1. Within the build folder, run $ make menuconfig 
 	2. Navigate to Component config > Camera configuration 
@@ -71,7 +73,7 @@ Replace the {macro argument} in the files to change the following:
 - pixel format `#define CAMERA_PIXEL_FORMAT {FORMAT}`
 - image resolution `#define CAMERA_FRAME_SIZE {RESOLUTION}`
 
-**NOTE:** Comments do list and define all valid selections. `PIXFORMAT_JPEG`does build and run, however motion detection is currently not operational for this format.
+**NOTE:** Comments list and define all valid selections. `PIXFORMAT_JPEG`does build and run, however motion detection is currently not operational for this format.
 
 
 ##### *pickdet_motion.h*
@@ -90,10 +92,6 @@ Replace the {macro argument} in the files to change the following:
 
 ##### *main.c*
 
-Select between between operating modes by commenting/uncommenting `#define HTTP_STREAM`.
+Use the `#define HTTP_STREAM` macro to enable or disable HTTP streaming with motion detection. If streaming is enabled, connect to the ESP-EYE AP via WiFi, open your browser and enter `192.168.4.1/stream` by default to view camera stream.
 
-When defined, motion detection, MQTT message publishing and HTTP streaming is done. Connect to the ESP-EYE AP and access stream via your browser using `192.168.4.1/stream`by default. 
-<ins>Note</ins>: For this mode, motion detection is only done when connected to the AP. 
-
-When commented, only motion detection and MQTT publishing is done. 
-<ins>Note</ins>: Motion detection with HTTP streaming does not provide a satisfactory stream frame rate (1-2 fps); the video is heavily lagged. 
+<ins>Note</ins>: With HTTP streaming enabled, motion detection is only done when connected to the AP. Currently, the operating frame rate is roughly 1-2 fps.
