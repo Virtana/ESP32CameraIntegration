@@ -147,7 +147,3 @@ Resources:
           FunctionName: !GetAtt DatabaseFunction.Arn
           SourceAccount: !Ref AWS::AccountId
             
-                
-
-
-

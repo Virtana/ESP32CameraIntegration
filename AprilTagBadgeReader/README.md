@@ -77,4 +77,6 @@ Communication between the ESP-EYE and the cloud can be observed through the MQTT
 - In the Subsription Topic textbox enter `badgeReader/topic/1`
 - Click "Subscribe to topic"
 
-Apriltags detected by the ESP-EYE should appear in the MQTT client and get logged in the "DetectedTagsLog" table.
+Apriltags detected by the ESP-EYE should appear in the MQTT client and get logged in the "DetectedTagsLog" table.  
+
+Apriltag images can be found [here](https://github.com/AprilRobotics/apriltag-imgs/tree/master/tag36h11).
