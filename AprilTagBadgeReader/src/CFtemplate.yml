@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Reads detection information from MQTT client and adds it to a daatabase
+
+Resources: 
+    MQTTLambdaRule:
+        Type: AWS::IoT::TopicRule
+        Properties:
+            RuleName: LambdaRule
+            TopicRulePayload:
+                RuleDisabled: false
+                Sql: SELECT * FROM 'badgeReader/topic/1' 
+                Actions:
+                    - Lambda:
+                        FunctionArn: !GetAtt DatabaseFunction.Arn
+    
+    LambdaRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                  - lambda.amazonaws.com
+                Action:
+                  - 'sts:AssumeRole'
+          Path: /
+          Policies:
+            - PolicyName: dynamodbAccessRole
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Action: 'dynamodb:*'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action: 'logs:*'
+                    Resource: '*'
+                  
+
+    DatabaseFunction:
+        Type: AWS::Lambda::Function
+        Properties:
+            FunctionName: manage_database
+            Role: !GetAtt LambdaRole.Arn
+            Timeout: 10
+            Handler: index.lambda_handler
+            Runtime: python3.7
+            MemorySize: 128
+            Code:
+                ZipFile: |
+                            
+                            
+                            import boto3
+                            import datetime
+                            import time
+
+                            def lambda_handler(event, context):
+                                dynamodb = boto3.resource('dynamodb')
+                                table = dynamodb.Table('PersonIDAssigned')
+                                
+                                response = table.get_item(
+                                    Key={
+                                        'Apriltag':int(event['id']),
+                                    }
+                                )
+                                item = response['Item']
+                                
+                                print(item['name'])
+                                
+                                log_db = boto3.resource('dynamodb')
+                                log_table = dynamodb.Table('DetectedTagsLog')
+                                
+                                time_since_epoch = int(event['ts'])
+                                GMT_OFFSET = -4;
+                                
+                                dt = datetime.datetime.fromtimestamp(time_since_epoch)
+                                
+                                #datetime.fromtimestamp converts time since epoch in seconds to readable time in GMT
+                                #The hour is adjusted to give correct time for current timezone.
+                                #Trinidad timezone = GMT-4
+                                
+                                h_gmt = int(dt.strftime('%H')) + GMT_OFFSET
+                                
+                                if(h_gmt < 0):
+                                    h_gmt = 24 + h_gmt
+                                
+                                fixed_hr = str(h_gmt)
+                                
+                                date_str = dt.strftime('%Y-%m-%d '+fixed_hr+ ':%M:%S')
+                                
+                                log_table.put_item(
+                                    Item={
+                                        'DetectedID': int(event['id']),
+                                        'Timestamp': date_str,
+                                        'Person': item['name'],
+                                        'MAC' : event['mac']
+                                    }
+                                )
+
+                                
+                                return 0
+
+
+    PersonIDTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: PersonIDAssigned
+            AttributeDefinitions:
+                - AttributeName: Apriltag
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: Apriltag
+                  KeyType: HASH
+            ProvisionedThroughput: 
+                ReadCapacityUnits: "5"
+                WriteCapacityUnits: "5"
+
+    DetectedTagsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: DetectedTagsLog
+            AttributeDefinitions:
+                - AttributeName: DetectedID
+                  AttributeType: N
+
+                - AttributeName: Timestamp
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: Timestamp
+                  KeyType: HASH
+
+                - AttributeName: DetectedID
+                  KeyType: RANGE
+            ProvisionedThroughput: 
+                ReadCapacityUnits: "5"
+                WriteCapacityUnits: "5"
+
+    LambdaInvocationPermission:
+        Type: AWS::Lambda::Permission
+        Properties:
+          SourceArn: !Join [ "", [ "arn:aws:iot:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":rule/", !Ref "MQTTLambdaRule" ] ]
+
+          Action: lambda:InvokeFunction
+          Principal: iot.amazonaws.com
+          FunctionName: !GetAtt DatabaseFunction.Arn
+          SourceAccount: !Ref AWS::AccountId
+            
+                
+
+
+
