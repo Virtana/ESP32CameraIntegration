@@ -32,9 +32,3 @@
 7. Convert to a C byte array
     * The C byte array is a read only format that can be imported into a C project to run inference locally. Use the following command to convert your tflite model.
     * `$ xxd -i converted_model.tflite > example_model_data.cc`
-
-
-
-
-
-
