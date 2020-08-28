@@ -17,7 +17,7 @@ set(IDF_PROJECT_EXECUTABLE badgeReader)
 #Add apriltag component
 get_filename_component(
     EXTRA_COMPONENT_DIRS
-    "components/apriltag-component" ABSOLUTE
+    "components/enrique-apriltag-component-master" ABSOLUTE
 )
 list(APPEND IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 
