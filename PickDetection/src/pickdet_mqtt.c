@@ -773,6 +773,8 @@ int pickdet_mqtt_main(bool awsIotMqttMode,
     if (status == EXIT_SUCCESS)
     {
         initialize_sntp();
+        ESP_LOGI("MQTT", "Initialized SNTP");
+
         struct mqttMessageVal receiver;
         while(true)
         {

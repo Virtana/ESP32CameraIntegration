@@ -66,18 +66,21 @@ void app_update_frame() {
     }
 }
 
-void pickdet_http_motion_detect(camera_fb_t *fb){
+//process motion and stores message in queue. Requires frame buffer to be passed as argument
+void motion_process(camera_fb_t *fb){
+    struct mqttMessageVal sender;
     app_downsample(fb);
-    if(app_motion_detect()){
+    if(app_motion_detect())
+    {
         ESP_LOGE(TAG, "Motion detected!");
+        sender.timestamp= get_time();
+        xQueueSend(xStructQueue,&sender,( TickType_t ) 0 );
     }
     app_update_frame();
-    ESP_LOGI(TAG, "=============================");
 }
 
+//independent motion detection to be run as task. Accesses frame buffer independently with continuous detection process.
 void pickdet_independent_motion_detect(){
-    struct mqttMessageVal sender;
-    vTaskDelay(8000/ portTICK_RATE_MS);
     while(true){
         camera_fb_t *fb = esp_camera_fb_get();
         if (!fb)
@@ -86,14 +89,7 @@ void pickdet_independent_motion_detect(){
             break;
         }
         else{
-            app_downsample(fb);
-            if(app_motion_detect())
-            {
-                ESP_LOGE(TAG, "Motion detected!");
-                sender.timestamp= get_time();
-                xQueueSend(xStructQueue,&sender,( TickType_t ) 0 );
-            }
-            app_update_frame();
+           motion_process(fb);
         }
     }
 }

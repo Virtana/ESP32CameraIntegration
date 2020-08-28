@@ -36,7 +36,7 @@ esp_err_t stream_handler(httpd_req_t *req)
         else
         {
             //motion detection
-            pickdet_http_motion_detect(fb);
+            motion_process(fb);
             
             if (fb->format != PIXFORMAT_JPEG)
             {
@@ -101,9 +101,46 @@ esp_err_t stream_handler(httpd_req_t *req)
     return res;
 }
 
+void wifi_init_soft()
+{
+    int a, b, c, d;
+    sscanf(EXAMPLE_IP_ADDR, "%d.%d.%d.%d", &a, &b, &c, &d);
+    tcpip_adapter_ip_info_t ip_info;
+    IP4_ADDR(&ip_info.ip, a, b, c, d);
+    IP4_ADDR(&ip_info.gw, a, b, c, d);
+    IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(WIFI_IF_AP));
+    ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(WIFI_IF_AP, &ip_info));
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(WIFI_IF_AP));
+
+    wifi_config_t wifi_config;
+    memset(&wifi_config, 0, sizeof(wifi_config_t));
+    snprintf((char*)wifi_config.ap.ssid, 32, "%s", WIFI_SSID);
+    wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
+    snprintf((char*)wifi_config.ap.password, 64, "%s", WIFI_PASSWORD);
+    wifi_config.ap.max_connection = 1;
+    wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+    if (strlen(WIFI_SSID) == 0) {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    if (strlen("")) {
+        int channel;
+        sscanf("", "%d", &channel);
+        wifi_config.ap.channel = channel;
+    }
+
+    esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config);
+
+    ESP_LOGI("HTTP", "wifi_init_softap finished.SSID:%s password:%s",
+             WIFI_SSID, WIFI_PASSWORD);
+}
+
 void pickdet_http_main()
 {
+    vTaskDelay(300/ portTICK_RATE_MS); //wait for MQTT Wifi and STA initialization before configuring AP
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    wifi_init_soft();
 
     httpd_uri_t stream_uri = {
         .uri = "/stream",
@@ -117,3 +154,4 @@ void pickdet_http_main()
         httpd_register_uri_handler(camera_httpd, &stream_uri);
     }
 }
+
