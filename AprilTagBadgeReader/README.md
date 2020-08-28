@@ -5,14 +5,13 @@ This is Track 4 of the [ESP32 Camera Integration Project](https://docs.google.co
 
 ## 1. Adding apriltag-component
 In order to detect apriltags, the apriltag library must be unzipped. To add apriltag component:
-- From root directory `cd AprilTagBadgeReader`.
 - Unzip apriltag-component into components folder
     - `unzip enrique-apriltag-component-master.zip -d ./components`
 
 ## 2. Flashing the ESP-EYE
 
 To flash ESP-EYE:
-- Run run_cmake.sh
+- Run `./run_cmake.sh`
 - `cd build`
 - Enable PSRAM for image capturing and apriltag detection and disable 'WiFi IRAM Speed Optimization'.
     - `make menuconfig`
