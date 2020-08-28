@@ -15,10 +15,10 @@
 
 4. Training the model
     * The model’s accuracy seems to fluctuate and plateau after 8 epochs. However, a much  larger value may be used to get different results.
-    ![ERROR LOADING - Training Epochs Image](/imageDocumentation/2-epochs.PNG/?raw=true "Training Epochs")
+    ![ERROR LOADING - Training Epochs Image](imageDocumentation/2-epochs.PNG/?raw=true "Training Epochs")
 
     * Under the “Check Predictions” section, you will see a visual representation of a small subset of images that the model predicted and its accuracy 
-    ![ERROR LOADING - Model Predictions](/imageDocumentation/3-predictions.PNG/?raw=true "Model Predictions")
+    ![ERROR LOADING - Model Predictions](imageDocumentation/3-predictions.PNG/?raw=true "Model Predictions")
 
 5. Converting to TFLite
     * The model must go through a quantization process before it is converted into a TFLite FlatBuffer format. Post-training quantization is an optimization technique that can reduce the model size while also improving CPU and hardware accelerator latency, with little degradation in model accuracy. 
@@ -27,7 +27,7 @@
 
 6. Export
     * The model and converted TFLite model files will be exported to your Google Drive in a Models folder. You can change the export path to customize this.
-    ![ERROR LOADING - Exporting Image](/imageDocumentation/5-export.PNG/?raw=true "Exporting the Model files")
+    ![ERROR LOADING - Exporting Image](imageDocumentation/5-export.PNG/?raw=true "Exporting the Model files")
 
 7. Convert to a C byte array
     * The C byte array is a read only format that can be imported into a C project to run inference locally. Use the following command to convert your tflite model.
